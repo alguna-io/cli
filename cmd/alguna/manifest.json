@@ -1,0 +1,4637 @@
+{
+  "baseUrl": "https://api.alguna.io",
+  "apiVersion": "2026-04-01",
+  "commands": [
+    {
+      "name": "bundles",
+      "description": "Product bundles, sold as one item.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-bundles",
+          "summary": "List product bundles",
+          "description": "Returns a paginated list of product bundles.",
+          "httpMethod": "GET",
+          "apiPath": "/bundles",
+          "options": [
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-bundle",
+          "summary": "Create a product bundle",
+          "description": "Creates a new product bundle. Product bundles group multiple priced products together so they can be referenced by a single ID in subscriptions, plans, and quotes.",
+          "epilogue": "Example (bundle.json sets name and prices):\n  alguna bundles create --body @bundle.json",
+          "httpMethod": "POST",
+          "apiPath": "/bundles",
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "A brief description of the bundle"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "The name of the bundle"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "name",
+            "prices"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-bundle",
+          "summary": "Get a product bundle",
+          "description": "Fetches a single product bundle by ID, including its default prices.",
+          "httpMethod": "GET",
+          "apiPath": "/bundles/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the bundle"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "operationId": "update-bundle",
+          "summary": "Update a product bundle",
+          "description": "Patches an existing product bundle. Supplying `prices` replaces the bundle's full price set.",
+          "httpMethod": "PATCH",
+          "apiPath": "/bundles/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the bundle"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "A brief description of the bundle"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "The name of the bundle"
+            }
+          ],
+          "hasRequestBody": true
+        }
+      ]
+    },
+    {
+      "name": "checkout-sessions",
+      "description": "Hosted checkout pages, where a customer signs up and pays.",
+      "methods": [
+        {
+          "name": "create",
+          "operationId": "create-checkout-session",
+          "summary": "Create a checkout session",
+          "description": "Creates a checkout session and returns a browser-safe session token plus a hosted checkout URL. Embed the URL with the Alguna Checkout SDK, or redirect the customer to it directly. The session charges a plan's prices, ad-hoc line items, or a bare amount, and expires after `expires_in_seconds`.",
+          "epilogue": "Example:\n  alguna checkout-sessions create --customer-id cus_123 --plan-id plan_123 --success-url https://example.com/done",
+          "httpMethod": "POST",
+          "apiPath": "/checkout-sessions",
+          "options": [
+            {
+              "name": "amount",
+              "field": "amount",
+              "in": "body",
+              "type": "string",
+              "description": "Total amount to charge when neither plan_id nor line_items are provided"
+            },
+            {
+              "name": "checkout-intent",
+              "field": "checkout_intent",
+              "in": "body",
+              "type": "string",
+              "description": "payment charges the customer; vault only collects and stores a payment method. Defaults to payment.",
+              "enum": [
+                "payment",
+                "vault"
+              ]
+            },
+            {
+              "name": "client-reference-id",
+              "field": "client_reference_id",
+              "in": "body",
+              "type": "string",
+              "description": "Your own reference for this checkout (order ID, cart ID). Echoed on the session and the checkout.session.completed webhook."
+            },
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "description": "ISO 4217 currency code; defaults to the organization currency"
+            },
+            {
+              "name": "customer-alias",
+              "field": "customer_alias",
+              "in": "body",
+              "type": "string",
+              "description": "Alternative identifier (external ID) for the customer. Used when customer_id is not provided."
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "body",
+              "type": "string",
+              "description": "Customer the checkout is for. Omit for guest checkout and pass customer instead — the customer account is created when checkout completes."
+            },
+            {
+              "name": "expires-in-seconds",
+              "field": "expires_in_seconds",
+              "in": "body",
+              "type": "integer",
+              "description": "Session lifetime in seconds (5 minutes to 7 days). Defaults to 86400 (24 hours)."
+            },
+            {
+              "name": "legal-entity-id",
+              "field": "legal_entity_id",
+              "in": "body",
+              "type": "string",
+              "description": "Legal entity to bill from. Defaults to the customer's legal entity, falling back to the organization default."
+            },
+            {
+              "name": "plan-id",
+              "field": "plan_id",
+              "in": "body",
+              "type": "string",
+              "description": "Plan to check out. The session's line items and amount are derived from the plan's prices. Mutually exclusive with line_items."
+            },
+            {
+              "name": "success-url",
+              "field": "success_url",
+              "in": "body",
+              "type": "string",
+              "description": "URL the customer can be sent to after a successful checkout"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "get",
+          "operationId": "get-checkout-session",
+          "summary": "Get a checkout session",
+          "description": "Returns the current state of a checkout session, including the payment and subscription it created once the customer completes checkout. Poll this endpoint or subscribe to the `checkout.session.completed` webhook event.",
+          "httpMethod": "GET",
+          "apiPath": "/checkout-sessions/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the checkout-session"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "credit-notes",
+      "description": "Credit notes, which credit or refund all or part of an invoice.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-credit-notes",
+          "summary": "List credit notes",
+          "description": "Returns a paginated list of credit notes for a given customer. The `customer_id` query parameter is required.",
+          "httpMethod": "GET",
+          "apiPath": "/credit-notes",
+          "options": [
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Customer ID to list credit notes for"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-credit-note",
+          "summary": "Create a credit note",
+          "description": "Creates a credit note in draft status. Optionally link it to an invoice. Linked paid invoices are supported, and pre-payment credit notes are supported for Alguna-managed invoices in `issued` or `overdue`. Add line items to specify the credited amounts, then apply the credit note to finalize it. Alternatively, set `apply` to create and apply the credit note in one call — the same synchronous flow as calling Apply Credit Note on a draft. Applying alone does not return funds; send `refund` as well to refund the customer, which requires a linked invoice that is paid. If applying fails, the credit note is left in draft and the error identifies it so it can be applied separately.",
+          "httpMethod": "POST",
+          "apiPath": "/credit-notes",
+          "options": [
+            {
+              "name": "apply",
+              "field": "apply",
+              "in": "body",
+              "type": "boolean",
+              "description": "Apply the credit note as part of creating it, synchronously, exactly as create followed by Apply Credit Note would. Defaults to false, leaving it a draft. If applying fails the credit note remains a draft and the error identifies it, so it can be retried via Apply Credit Note."
+            },
+            {
+              "name": "billing-period-end",
+              "field": "billing_period_end",
+              "in": "body",
+              "type": "string",
+              "description": "End of the billing period"
+            },
+            {
+              "name": "billing-period-start",
+              "field": "billing_period_start",
+              "in": "body",
+              "type": "string",
+              "description": "Start of the billing period"
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "body",
+              "type": "string",
+              "description": "Customer the credit note is issued to. Required unless invoice_id is given, in which case it is taken from the invoice; when both are given they must agree."
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Credit note description"
+            },
+            {
+              "name": "invoice-id",
+              "field": "invoice_id",
+              "in": "body",
+              "type": "string",
+              "description": "Linked invoice. Required unless customer_id is given. Pre-payment credit notes are supported only for Alguna-managed invoices in issued or overdue"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "get",
+          "operationId": "get-credit-note",
+          "summary": "Get a credit note",
+          "description": "Fetches a single credit note by ID, including line items and attachments.",
+          "httpMethod": "GET",
+          "apiPath": "/credit-notes/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the credit-note"
+            }
+          ]
+        },
+        {
+          "name": "apply",
+          "operationId": "apply-credit-note",
+          "summary": "Apply a credit note",
+          "description": "Applies a draft credit note. Applying to a paid invoice can optionally trigger a refund to the original payment method or a wallet. Applying to an Alguna-managed invoice in `issued` or `overdue` records a pre-payment credit without issuing a refund. Once applied, the credit note cannot be modified.",
+          "httpMethod": "POST",
+          "apiPath": "/credit-notes/{id}/apply",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the credit-note"
+            }
+          ],
+          "options": [
+            {
+              "name": "do-refund",
+              "field": "do_refund",
+              "in": "body",
+              "type": "boolean",
+              "required": true,
+              "description": "Whether to issue a refund when applying to a paid invoice"
+            },
+            {
+              "name": "refund-destination",
+              "field": "refund_destination",
+              "in": "body",
+              "type": "string",
+              "description": "Where to send the refund when refunding a paid invoice",
+              "enum": [
+                "original_payment",
+                "wallet"
+              ]
+            },
+            {
+              "name": "wallet-id",
+              "field": "wallet_id",
+              "in": "body",
+              "type": "string",
+              "description": "Wallet to refund to when refund_destination is wallet for a paid-invoice refund"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "do_refund"
+          ],
+          "requireConfirmation": "This operation applies the credit note, after which it cannot change, and can refund the customer."
+        },
+        {
+          "name": "create-from-invoice",
+          "operationId": "create-credit-note-from-invoice",
+          "summary": "Credit an invoice",
+          "description": "Creates a draft credit note against an invoice, crediting it at the prices and tax it was issued with rather than calculating tax again. Omit `line_items` to credit everything still uncredited on the invoice. Give `line_items` to credit specific invoice lines, each by the `quantity` of units to credit, which may be fractional. Every line here credits an invoice line item; to credit an amount that is not on the invoice, use create-credit-note instead.",
+          "httpMethod": "POST",
+          "apiPath": "/invoices/{id}/credit-notes",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            }
+          ],
+          "options": [
+            {
+              "name": "apply",
+              "field": "apply",
+              "in": "body",
+              "type": "boolean",
+              "description": "Apply the credit note as part of creating it, synchronously, exactly as create followed by Apply Credit Note would. Defaults to false, leaving it a draft. If applying fails the credit note remains a draft and the error identifies it, so it can be retried via Apply Credit Note."
+            }
+          ],
+          "hasRequestBody": true
+        }
+      ]
+    },
+    {
+      "name": "credits",
+      "description": "Prepaid credit, reserved and charged for usage.",
+      "methods": [
+        {
+          "name": "check",
+          "operationId": "check-credits",
+          "summary": "Reserve credits",
+          "description": "Prices work before it happens and, optionally, reserves credit for it. The request carries no credit amount: describe the work as the events it will produce, and the response's `charges` say what it prices to per metric.\n\nSend `events` alone to get a price with nothing recorded. Send `reserve` to open a hold, then close it with `POST /credits/track`. `\"reserve\": {}` with `events` holds enough for exactly that work; `\"reserve\": {\"max_quantity\": \"100000\"}` with `event_name` holds a ceiling in metric units. An `Idempotency-Key` is required whenever `reserve` is set. Each metric is held at the rate frozen when the hold opened, and the hold expires after 15 minutes unless `ttl_seconds` asks for longer (maximum 4 hours).\n\nOnly credit-gated metrics are accepted: an event feeding no credit-consuming metric is rejected with `422` and belongs on `POST /events`. Insufficient credit returns `200` with `allowed: false`; an `allowed: true` response carrying no `reservation_id` opened no hold.\n\nThe SDKs send no automatic `Idempotency-Key` on this call and retry it without one, because a price check records nothing. Send your own key only to open a hold, where it is required and identifies the hold, or to replay a specific response; a retry then sends the same key. The SDKs do not retry a `500`. `409` means the key is bound to a different reservation. Back off on `429`, which also covers a ledger at its concurrent-hold cap.",
+          "epilogue": "Example:\n  alguna credits check --account cus_123 --event-name api_call",
+          "httpMethod": "POST",
+          "apiPath": "/credits/check",
+          "options": [
+            {
+              "name": "account",
+              "field": "account",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Customer account ID or alias the credits belong to"
+            },
+            {
+              "name": "event-name",
+              "field": "event_name",
+              "in": "body",
+              "type": "string",
+              "description": "The usage event the work will produce. This is what resolves which billable metrics the check is against — you name what you are about to do, not which metric counts it. An event that feeds no credit-consuming metric is rejected with 422 — that usage belongs on POST /events; an event feeding several credit-consuming metrics is checked (and held) against all of them at once. Optional when events carries the sample; required for reserve.max_quantity."
+            },
+            {
+              "name": "ttl-seconds",
+              "field": "ttl_seconds",
+              "in": "body",
+              "type": "integer",
+              "description": "How long the hold stays open, in seconds. Defaults to 900 (15 minutes) and cannot exceed 14400 (4 hours), the maximum lifetime any hold may reach. Use it for a run that cannot report progress as it goes; a run that can should send partial settlements to /track instead, since each one slides this same TTL forward. Requires reserve. Not part of idempotency identity: a retry under the same Idempotency-Key replays the original hold with its original expires_at, whatever ttl_seconds it now carries."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "account"
+          ],
+          "identifiedByBody": true
+        },
+        {
+          "name": "get-reservation",
+          "operationId": "get-credit-reservation",
+          "summary": "Read a reservation",
+          "description": "Reports a reservation's current state, what it covers, and every close already committed against it.\n\n`closes` exists for one recovery: a client that has lost its `Idempotency-Key` and cannot reproduce the events it sent can read what already landed, instead of resending and burning twice. This is a read and cannot settle anything. An unknown or foreign token returns `404`, indistinguishably.",
+          "httpMethod": "GET",
+          "apiPath": "/credits/reservations/{reservation_id}",
+          "arguments": [
+            {
+              "name": "reservation_id",
+              "description": "Unique identifier for the reservation"
+            }
+          ]
+        },
+        {
+          "name": "track",
+          "operationId": "track-credits",
+          "summary": "Track credit consumption",
+          "description": "Records usage and charges credit for it. The request carries no credit amount: send what happened, and the response's `charges` carry what it priced to per metric, with `totals` as the sum.\n\nTwo shapes. A direct draw (`account` + `events`) charges against the account's current credit. A settlement (`reservation_id` + `events` + `close`) closes a hold opened by `/credits/check`, pricing each metric at the rate frozen when the hold opened. One payload can feed several credit-consuming metrics, and the draw is all-or-nothing: a refusal for one metric leaves every metric uncharged.\n\nEvents sent here are both metered and charged, so do not also send them to `POST /events`. An event feeding no credit-consuming metric is rejected with `422` and belongs there instead. Insufficient credit returns `200` with `allowed: false`.\n\nThe events' own `unique_id`s identify the work, so a resent batch draws once. The SDKs send no automatic `Idempotency-Key` on this call and retry it without one. Send your own key only to replay a specific response; it then replaces the `unique_id`s as the identity, so reuse it when you resend the same work. The SDKs do not retry a `500`. `409` means the identity is bound to different work. Back off on `429`.",
+          "httpMethod": "POST",
+          "apiPath": "/credits/track",
+          "options": [
+            {
+              "name": "account",
+              "field": "account",
+              "in": "body",
+              "type": "string",
+              "description": "Customer account ID or alias; direct-draw mode. Required unless reservation_id is set, where the account comes from the reservation."
+            },
+            {
+              "name": "close",
+              "field": "close",
+              "in": "body",
+              "type": "boolean",
+              "description": "Whether this is the final call for the reservation. Required whenever reservation_id is set: there is no safe default, since true would end runs that meant to continue and false would leak reservations until they expire. The reservation also closes on its own if the events consume everything held. Not valid on a direct draw."
+            },
+            {
+              "name": "on-envelope-exceeded",
+              "field": "on_envelope_exceeded",
+              "in": "body",
+              "type": "string",
+              "description": "What to do when a settle cannot be fully covered by credit on a metric that stops at zero — either because it prices past the reservation's authorized hold, or because credit ran out before a late settle arrived. \"reject\" (the default) refuses the settle, burning and recording nothing. \"record\" burns what is available and reports the remainder in the charges' overflow, deliberately weakening a hard stop you configured. Reservation-settlement mode only. The refusal body's reason says which condition fired: adding credit resolves coverage_shortfall, but not envelope_exceeded, whose limit is the hold's size.",
+              "enum": [
+                "reject",
+                "record"
+              ]
+            },
+            {
+              "name": "reservation-id",
+              "field": "reservation_id",
+              "in": "body",
+              "type": "string",
+              "description": "Reservation token returned by /check, to close it; reservation-settlement mode. Mutually exclusive with account. The events sent alongside are both metered and charged, so do not send them to /events as well."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "events"
+          ],
+          "identifiedByBody": true
+        }
+      ]
+    },
+    {
+      "name": "customers",
+      "description": "The accounts you bill, with their connected accounts and entitlements.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-customers",
+          "summary": "List customers",
+          "description": "Returns a paginated list of customers. Supports filtering by sales owner, customer success manager, tag IDs, active-subscription status, integration IDs, alias, and contact email.",
+          "httpMethod": "GET",
+          "apiPath": "/customers",
+          "options": [
+            {
+              "name": "alias",
+              "field": "alias",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by customer alias (external ID)"
+            },
+            {
+              "name": "csm-id",
+              "field": "csm_id",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by customer success manager user ID (comma-separated to match any)"
+            },
+            {
+              "name": "email",
+              "field": "email",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by contact email address"
+            },
+            {
+              "name": "has-active-subscriptions",
+              "field": "has_active_subscriptions",
+              "in": "query",
+              "type": "boolean",
+              "description": "Filter by whether the customer has active subscriptions"
+            },
+            {
+              "name": "integration-ids",
+              "field": "integration_ids",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by external integration IDs (comma-separated to match any)"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "sales-owner-id",
+              "field": "sales_owner_id",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by sales owner user ID (comma-separated to match any)"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order. Sortable fields: name, created_at"
+            },
+            {
+              "name": "tag-ids",
+              "field": "tag_ids",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by tag IDs (comma-separated to match any)"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-customer",
+          "summary": "Create a customer",
+          "description": "Creates a new customer with optional contacts, billing address, aliases, and a required default currency.",
+          "httpMethod": "POST",
+          "apiPath": "/customers",
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "ISO 4217 currency code"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "The name of the customer"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "currency",
+            "name"
+          ]
+        },
+        {
+          "name": "lookup",
+          "operationId": "lookup-customer",
+          "summary": "Look up a customer ID by alias",
+          "description": "Resolves an alias to its Alguna customer ID. The `alias` accepts the Alguna account ID, a customer alias, or a connected-account external ID (such as a Stripe customer ID). Returns 404 if no customer in your organization matches. Use this when you hold an external identifier and only need the Alguna ID; to fetch the full customer, use Get a customer instead.",
+          "httpMethod": "GET",
+          "apiPath": "/customers/lookup",
+          "options": [
+            {
+              "name": "alias",
+              "field": "alias",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Customer alias to resolve — an Alguna account ID, a customer alias, or a connected-account external ID (such as a Stripe customer ID)"
+            }
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-customer",
+          "summary": "Get a customer",
+          "description": "Fetches a single customer by ID, including contacts, billing address, and tax details (rate, status, country, type, and taxability reason). The `id` path parameter accepts the Alguna account ID, a customer alias, or a connected-account external ID (such as a Stripe customer ID).",
+          "httpMethod": "GET",
+          "apiPath": "/customers/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "operationId": "update-customer",
+          "summary": "Update a customer",
+          "description": "Patches an existing customer. Only the fields provided in the request body are modified. Supplying contacts or aliases replaces the full list. The `id` path parameter accepts the Alguna account ID, a customer alias, or a connected-account external ID (such as a Stripe customer ID).",
+          "httpMethod": "PATCH",
+          "apiPath": "/customers/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            }
+          ],
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "description": "ISO 4217 currency code"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "The name of the customer"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "list-connected-accounts",
+          "operationId": "list-customer-connected-accounts",
+          "summary": "List connected accounts for a customer",
+          "description": "Returns the customer's accounts in connected external systems (for example a Stripe customer or a HubSpot company), including the integration each link belongs to, the account's identifier in the external system, and a link to it where available. The `id` path parameter accepts the Alguna account ID, a customer alias, or a connected-account external ID (such as a Stripe customer ID).",
+          "httpMethod": "GET",
+          "apiPath": "/customers/{id}/connected-accounts",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            }
+          ]
+        },
+        {
+          "name": "create-connected-account",
+          "operationId": "create-customer-connected-account",
+          "summary": "Link a connected account to a customer",
+          "description": "Links the customer to an account in an external system by recording the integration and the account's identifier in that system. This records the mapping only: it does not create anything in the external system and does not trigger a sync of any data in either direction. The `id` path parameter accepts the Alguna account ID, a customer alias, or an existing connected-account external ID.",
+          "httpMethod": "POST",
+          "apiPath": "/customers/{id}/connected-accounts",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            }
+          ],
+          "options": [
+            {
+              "name": "external-id",
+              "field": "external_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Identifier of the account in the external system"
+            },
+            {
+              "name": "integration-id",
+              "field": "integration_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Identifier of the integration to link the account through"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "external_id",
+            "integration_id"
+          ]
+        },
+        {
+          "name": "delete-connected-account",
+          "operationId": "delete-customer-connected-account",
+          "summary": "Unlink a connected account from a customer",
+          "description": "Removes the link between the customer and an external-system account. This removes the mapping only: it does not delete anything in the external system and does not trigger a sync. The `id` path parameter accepts the Alguna account ID, a customer alias, or an existing connected-account external ID.",
+          "httpMethod": "DELETE",
+          "apiPath": "/customers/{id}/connected-accounts/{connectedAccountId}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            },
+            {
+              "name": "connectedAccountId",
+              "description": "Unique identifier for the connected-account"
+            }
+          ],
+          "requireConfirmation": "This operation unlinks the external account from the customer. It changes nothing in the external system."
+        },
+        {
+          "name": "list-entitlements",
+          "operationId": "list-customer-entitlements",
+          "summary": "List active entitlements for a customer",
+          "description": "Returns the flattened list of active entitlements across all of the customer's active subscriptions. Each entry is a single entitlement on the current published version of one active subscription. Use the `subscription_id` field on each entry to see which subscription the entitlement comes from. The `id` path parameter accepts the Alguna account ID, a customer alias, or a connected-account external ID (such as a Stripe customer ID).",
+          "httpMethod": "GET",
+          "apiPath": "/customers/{id}/entitlements",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            }
+          ]
+        },
+        {
+          "name": "list-payment-methods",
+          "operationId": "list-customer-payment-methods",
+          "summary": "List saved payment methods for a customer",
+          "description": "Returns the customer's saved, active payment methods, newest first, with redacted details only: card brand, last four digits and expiry, or the last four digits of a bank account. `is_default` marks the payment method that auto-pay charges when a subscription has no payment method of its own. Payment methods saved through a checkout session with `checkout_intent: vault` appear here once the customer completes the session. The `id` path parameter accepts the Alguna account ID, a customer alias, or a connected-account external ID (such as a Stripe customer ID).",
+          "httpMethod": "GET",
+          "apiPath": "/customers/{id}/payment-methods",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "description": "Billable usage events, which metered prices read.",
+      "methods": [
+        {
+          "name": "ingest",
+          "operationId": "ingest-events",
+          "summary": "Ingest billable events",
+          "description": "Ingests a batch of usage events for metering. Accepts up to 100 events per request. Each event must carry a unique `unique_id` for idempotency and may include arbitrary properties used by metric filters and aggregations.",
+          "epilogue": "Example (events.json holds {\"events\": [...]}):\n  alguna events ingest --body @events.json",
+          "httpMethod": "POST",
+          "apiPath": "/events",
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "events"
+          ],
+          "identifiedByBody": true
+        }
+      ]
+    },
+    {
+      "name": "insights",
+      "description": "Revenue, billings, customer and receivables reports.",
+      "methods": [
+        {
+          "name": "ar-aging",
+          "operationId": "get-ar-aging",
+          "summary": "Get accounts receivable aging summary",
+          "description": "Returns the organization-wide receivables position as of now: total open balance, the past-due portion, invoice counts, and a breakdown by days past due. Unlike the other insights endpoints this is a point-in-time snapshot rather than a period aggregate, so it takes no date range. Amounts from every currency are converted into the organization's base currency.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/ar-aging"
+        },
+        {
+          "name": "ar-aging-by-customer",
+          "operationId": "get-ar-aging-by-customer",
+          "summary": "Get accounts receivable aging by customer",
+          "description": "Returns one entry per customer and currency, each with the open balance, invoice counts, and a breakdown by days past due. A customer billed in more than one currency produces one entry per currency, so entries for a single customer can be summed by invoice count but never by amount. Like the aging summary, this is a point-in-time snapshot and takes no date range.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/ar-aging/by-customer",
+          "options": [
+            {
+              "name": "customer-alias",
+              "field": "customer_alias",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by an alternative identifier (external ID) for the customer. Used when customer_id is not provided."
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by customer ID. Provide at most one of customer_id or customer_alias; omit both to report on every customer."
+            }
+          ]
+        },
+        {
+          "name": "billings-by-customer",
+          "operationId": "get-billings-by-customer",
+          "summary": "Get billings breakdown by customer",
+          "description": "Returns top customers ranked by net billings for the selected period, with a comparison to the prior period. Remaining customers are aggregated into an 'other' total.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/billings/by-customer",
+          "options": [
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query. Determines the primary period and automatically calculates a comparison period.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "billings-by-product",
+          "operationId": "get-billings-by-product",
+          "summary": "Get billings breakdown by product",
+          "description": "Returns billings broken down by product for the selected period, with a comparison to the prior period.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/billings/by-product",
+          "options": [
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Optional customer ID to filter by"
+            },
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "billings-over-time",
+          "operationId": "get-billings-over-time",
+          "summary": "Get billings over time",
+          "description": "Returns a time series of net billings data points split into fixed and metered components. Based on issued invoices.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/billings/over-time",
+          "options": [
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query. Determines the primary period and automatically calculates a comparison period.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "customers",
+          "operationId": "get-customer-insights",
+          "summary": "Get customer metrics",
+          "description": "Returns customer lifecycle metrics: active, churned, new, and reactivated customer counts with comparison to the prior period.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/customers"
+        },
+        {
+          "name": "customers-over-time",
+          "operationId": "get-customer-insights-over-time",
+          "summary": "Get customer metrics over time",
+          "description": "Returns a time series of customer lifecycle events: new, reactivated, existing, and churned customer counts per period.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/customers/over-time",
+          "options": [
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query. Determines the primary period and automatically calculates a comparison period.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "revenue",
+          "operationId": "get-revenue-insights",
+          "summary": "Get net revenue summary",
+          "description": "Returns a net revenue summary including current month, last month, and annualized figures broken down by fixed (recurring) and metered (usage-based) revenue.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/revenue"
+        },
+        {
+          "name": "revenue-breakdown-over-time",
+          "operationId": "get-revenue-breakdown-over-time",
+          "summary": "Get revenue breakdown over time",
+          "description": "Returns a time series of revenue classified by movement type: existing, new, expansion, contraction, and churn.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/revenue/breakdown-over-time",
+          "options": [
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query. Determines the primary period and automatically calculates a comparison period.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "revenue-by-customer",
+          "operationId": "get-revenue-by-customer",
+          "summary": "Get revenue breakdown by customer",
+          "description": "Returns top customers ranked by net revenue for the selected period, with a comparison to the prior period. Remaining customers are aggregated into an 'other' total.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/revenue/by-customer",
+          "options": [
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query. Determines the primary period and automatically calculates a comparison period.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "revenue-by-product",
+          "operationId": "get-revenue-by-product",
+          "summary": "Get revenue breakdown by product",
+          "description": "Returns revenue broken down by product for the selected period, with a comparison to the prior period.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/revenue/by-product",
+          "options": [
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Optional customer ID to filter by"
+            },
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "revenue-over-time",
+          "operationId": "get-revenue-over-time",
+          "summary": "Get revenue over time",
+          "description": "Returns a time series of net revenue data points split into fixed and metered components. Resolution (daily or monthly) is automatically determined by the date range.",
+          "epilogue": "Example:\n  alguna insights revenue-over-time --date-range last_twelve_months",
+          "httpMethod": "GET",
+          "apiPath": "/insights/revenue/over-time",
+          "options": [
+            {
+              "name": "date-range",
+              "field": "date_range",
+              "in": "query",
+              "type": "string",
+              "required": true,
+              "description": "Time period for the query. Determines the primary period and automatically calculates a comparison period.",
+              "enum": [
+                "this_month",
+                "last_month",
+                "two_months_ago",
+                "this_quarter",
+                "last_quarter",
+                "two_quarters_ago",
+                "this_year",
+                "last_year",
+                "last_twelve_months",
+                "all_time"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "revenue-by-subscription",
+          "operationId": "get-revenue-by-subscription",
+          "summary": "Get MRR, ARR, and ACV for a subscription",
+          "description": "Returns the monthly recurring revenue (MRR), annual recurring revenue (ARR), and annual contract value (ACV) for a single subscription.",
+          "httpMethod": "GET",
+          "apiPath": "/insights/revenue/subscription/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "integrations",
+      "description": "The external systems connected to your organization.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-integrations",
+          "summary": "List integrations",
+          "description": "Returns the organization's connected integrations (for example Stripe, HubSpot, or QuickBooks). Use the `id` of an integration when linking a connected account to a customer. Supports filtering by provider type.",
+          "epilogue": "Example:\n  alguna integrations list --provider stripe",
+          "httpMethod": "GET",
+          "apiPath": "/integrations",
+          "options": [
+            {
+              "name": "provider",
+              "field": "provider",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by integration provider"
+            }
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-integration",
+          "summary": "Get an integration",
+          "description": "Fetches a single integration by its ID.",
+          "httpMethod": "GET",
+          "apiPath": "/integrations/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the integration"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invoices",
+      "description": "Invoices and their line items, payments, voids and PDFs.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-invoices",
+          "summary": "List invoices",
+          "description": "Returns a paginated list of invoices. Supports filtering by status, customer, subscription, autopay flag, external reference, tag IDs, and date ranges on invoicing, issue, due, and paid dates.",
+          "httpMethod": "GET",
+          "apiPath": "/invoices",
+          "options": [
+            {
+              "name": "autopay",
+              "field": "autopay",
+              "in": "query",
+              "type": "boolean",
+              "description": "Filter by autopay flag"
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by customer ID"
+            },
+            {
+              "name": "due-date-gte",
+              "field": "due_date_gte",
+              "in": "query",
+              "type": "string",
+              "description": "Due date lower bound (inclusive)"
+            },
+            {
+              "name": "due-date-lte",
+              "field": "due_date_lte",
+              "in": "query",
+              "type": "string",
+              "description": "Due date upper bound (inclusive)"
+            },
+            {
+              "name": "external-reference",
+              "field": "external_reference",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by external reference"
+            },
+            {
+              "name": "invoicing-date-gte",
+              "field": "invoicing_date_gte",
+              "in": "query",
+              "type": "string",
+              "description": "Invoicing date lower bound (inclusive)"
+            },
+            {
+              "name": "invoicing-date-lte",
+              "field": "invoicing_date_lte",
+              "in": "query",
+              "type": "string",
+              "description": "Invoicing date upper bound (inclusive)"
+            },
+            {
+              "name": "issue-date-gte",
+              "field": "issue_date_gte",
+              "in": "query",
+              "type": "string",
+              "description": "Issue date lower bound (inclusive)"
+            },
+            {
+              "name": "issue-date-lte",
+              "field": "issue_date_lte",
+              "in": "query",
+              "type": "string",
+              "description": "Issue date upper bound (inclusive)"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "paid-date-gte",
+              "field": "paid_date_gte",
+              "in": "query",
+              "type": "string",
+              "description": "Paid date lower bound (inclusive)"
+            },
+            {
+              "name": "paid-date-lte",
+              "field": "paid_date_lte",
+              "in": "query",
+              "type": "string",
+              "description": "Paid date upper bound (inclusive)"
+            },
+            {
+              "name": "reference",
+              "field": "reference",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by invoice reference number"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order. Sortable fields: created_at, invoicing_date, issue_date, due_date, paid_date, account_name, status"
+            },
+            {
+              "name": "status",
+              "field": "status",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by invoice status. Pass a comma-separated list to match any."
+            },
+            {
+              "name": "subscription-id",
+              "field": "subscription_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by subscription ID"
+            },
+            {
+              "name": "tag-ids",
+              "field": "tag_ids",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by tag IDs (comma-separated to match any)"
+            },
+            {
+              "name": "tax-calculation-id",
+              "field": "tax_calculation_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by tax calculation ID"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-invoice",
+          "summary": "Create an invoice",
+          "description": "Creates an ad-hoc invoice for a customer. Callers can supply line items, a billing period, purchase order number, and an initial status (`draft` or `issued`). Requesting `issued` releases the invoice for issuance, which completes asynchronously — the response returns the invoice in `processing` and it settles to `issued` shortly after, observable via the Get Invoice endpoint. Alternatively, pass `tax_calculation_id` to turn a persisted tax calculation into an invoice: its line items, tax, and buyer are pinned and the invoice is issued synchronously; add a `payment` and `status: paid` to record settlement and mark it paid in the same call.",
+          "httpMethod": "POST",
+          "apiPath": "/invoices",
+          "options": [
+            {
+              "name": "billing-period-end",
+              "field": "billing_period_end",
+              "in": "body",
+              "type": "string",
+              "description": "End of the invoice's billing period, exclusive: for a period through 31 January send 2026-02-01T00:00:00Z. Send with billing_period_start."
+            },
+            {
+              "name": "billing-period-start",
+              "field": "billing_period_start",
+              "in": "body",
+              "type": "string",
+              "description": "Start of the invoice's billing period, inclusive. Send with billing_period_end."
+            },
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "description": "ISO 4217 currency code; required unless tax_calculation_id is set"
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "body",
+              "type": "string",
+              "description": "Existing customer to bill. On the tax_calculation_id path, leave empty to mint a guest customer from the calculation's buyer."
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Invoice description or memo"
+            },
+            {
+              "name": "issue-date",
+              "field": "issue_date",
+              "in": "body",
+              "type": "string",
+              "description": "Date to issue the invoice"
+            },
+            {
+              "name": "merchant-id",
+              "field": "merchant_id",
+              "in": "body",
+              "type": "string",
+              "description": "Existing sub-merchant the invoice is issued for; you remain the seller of record. Create the merchant before referencing it here. Optional alongside tax_calculation_id, where it must match the merchant the calculation was made for. Requires the merchants entitlement"
+            },
+            {
+              "name": "purchase-order-number",
+              "field": "purchase_order_number",
+              "in": "body",
+              "type": "string",
+              "description": "Purchase order number"
+            },
+            {
+              "name": "status",
+              "field": "status",
+              "in": "body",
+              "type": "string",
+              "description": "Initial invoice status. Defaults to draft. Setting issued releases the invoice for issuance, which completes asynchronously: the response returns the invoice in processing, and it settles to issued shortly after — poll the Get Invoice endpoint to observe the final status. paid is only valid on the tax_calculation_id path and must be sent together with a payment.",
+              "enum": [
+                "draft",
+                "issued",
+                "paid"
+              ]
+            },
+            {
+              "name": "tax-calculation-id",
+              "field": "tax_calculation_id",
+              "in": "body",
+              "type": "string",
+              "description": "Id of a persisted tax calculation; its stored line items, tax amounts, and buyer become the invoice, which is issued synchronously with no recalculation. Mutually exclusive with line_items (the calculation supplies them). Leave status unset or set it to issued to issue the invoice; set status to paid together with a payment to also mark it paid."
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "get",
+          "operationId": "get-invoice",
+          "summary": "Get an invoice",
+          "description": "Fetches a single invoice by ID, including all line items, totals, and status.",
+          "httpMethod": "GET",
+          "apiPath": "/invoices/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "operationId": "update-invoice",
+          "summary": "Update an invoice",
+          "description": "Patches descriptive metadata on an existing invoice (description, purchase order number). Line items are managed through the dedicated line item endpoints.",
+          "httpMethod": "PATCH",
+          "apiPath": "/invoices/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Invoice description or memo"
+            },
+            {
+              "name": "purchase-order-number",
+              "field": "purchase_order_number",
+              "in": "body",
+              "type": "string",
+              "description": "Purchase order number"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "add-line-item",
+          "operationId": "create-invoice-line-item",
+          "summary": "Create an invoice line item",
+          "description": "Adds a new line item to an existing invoice. The invoice must not yet be finalized.",
+          "httpMethod": "POST",
+          "apiPath": "/invoices/{id}/line-items",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            }
+          ],
+          "options": [
+            {
+              "name": "billing-period-end",
+              "field": "billing_period_end",
+              "in": "body",
+              "type": "string",
+              "description": "End of the service period this line covers, exclusive: for a period through 31 January send 2026-02-01T00:00:00Z. Send with billing_period_start."
+            },
+            {
+              "name": "billing-period-start",
+              "field": "billing_period_start",
+              "in": "body",
+              "type": "string",
+              "description": "Start of the service period this line covers, inclusive. Send with billing_period_end."
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Description of the line item"
+            },
+            {
+              "name": "quantity",
+              "field": "quantity",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Quantity"
+            },
+            {
+              "name": "unit-price",
+              "field": "unit_price",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Unit price, excluding tax. Tax is calculated on top of it."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "description",
+            "quantity",
+            "unit_price"
+          ]
+        },
+        {
+          "name": "delete-line-item",
+          "operationId": "delete-invoice-line-item",
+          "summary": "Delete an invoice line item",
+          "description": "Removes a line item from an invoice. The invoice must not yet be finalized.",
+          "httpMethod": "DELETE",
+          "apiPath": "/invoices/{id}/line-items/{line_item_id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            },
+            {
+              "name": "line_item_id",
+              "description": "Unique identifier for the line-item"
+            }
+          ],
+          "requireConfirmation": "This operation removes the line item from the invoice."
+        },
+        {
+          "name": "update-line-item",
+          "operationId": "update-invoice-line-item",
+          "summary": "Update an invoice line item",
+          "description": "Patches an existing invoice line item. Only the fields provided in the request body are modified.",
+          "httpMethod": "PATCH",
+          "apiPath": "/invoices/{id}/line-items/{line_item_id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            },
+            {
+              "name": "line_item_id",
+              "description": "Unique identifier for the line-item"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Description of the line item"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "mark-as-paid",
+          "operationId": "mark-invoice-as-paid",
+          "summary": "Mark an invoice as paid",
+          "description": "Records a manual payment against an invoice. Accepts an optional amount (defaults to the invoice total), payment date, external payment source, and free-text note. Transitions the invoice to `paid` when the balance is settled.",
+          "httpMethod": "POST",
+          "apiPath": "/invoices/{id}/mark-as-paid",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            }
+          ],
+          "options": [
+            {
+              "name": "amount-paid",
+              "field": "amount_paid",
+              "in": "body",
+              "type": "string",
+              "description": "Amount paid; defaults to the full invoice total"
+            },
+            {
+              "name": "external-payment-note",
+              "field": "external_payment_note",
+              "in": "body",
+              "type": "string",
+              "description": "Free-text note about the payment"
+            },
+            {
+              "name": "external-payment-source",
+              "field": "external_payment_source",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Payment source",
+              "enum": [
+                "bank_transfer",
+                "cheque",
+                "payment_card",
+                "cash",
+                "other"
+              ]
+            },
+            {
+              "name": "paid-date",
+              "field": "paid_date",
+              "in": "body",
+              "type": "string",
+              "description": "Date of payment; defaults to the current date"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "external_payment_source"
+          ],
+          "requireConfirmation": "This operation records a manual payment against the invoice. It cannot be reversed."
+        },
+        {
+          "name": "generate-pdf",
+          "operationId": "generate-invoice-pdf",
+          "summary": "Generate an invoice PDF",
+          "description": "Returns the rendered PDF for an invoice as a binary `application/pdf` response. If a custom PDF has been uploaded for the invoice, it is served directly, otherwise the standard template is rendered on demand.",
+          "epilogue": "Example:\n  alguna invoices generate-pdf inv_123 --out invoice.pdf",
+          "httpMethod": "GET",
+          "apiPath": "/invoices/{id}/pdf",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            }
+          ],
+          "binary": true
+        },
+        {
+          "name": "void",
+          "operationId": "void-invoice",
+          "summary": "Void an invoice",
+          "description": "Voids an invoice, marking it as no longer collectable. Accepts an optional void date (defaults to the current date); it may be backdated but must not be in the future or before the invoice's issue date. Only issued or overdue invoices can be voided: voiding an invoice in any other status returns a 400, and an out-of-range void date returns a 422.",
+          "httpMethod": "POST",
+          "apiPath": "/invoices/{id}/void",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the invoice"
+            }
+          ],
+          "options": [
+            {
+              "name": "void-date",
+              "field": "void_date",
+              "in": "body",
+              "type": "string",
+              "description": "Date the invoice was voided; defaults to the current date. May be backdated but must not be in the future or before the invoice's issue date."
+            }
+          ],
+          "hasRequestBody": true,
+          "requireConfirmation": "This operation voids the invoice, so it can no longer be collected. It cannot be reversed."
+        }
+      ]
+    },
+    {
+      "name": "merchants",
+      "description": "The merchants that issue your invoices and quotes, with their branding.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-merchants",
+          "summary": "List merchants",
+          "description": "Returns a paginated list of merchants, by display name. Archived merchants are excluded unless you ask for them.",
+          "httpMethod": "GET",
+          "apiPath": "/merchants",
+          "options": [
+            {
+              "name": "display-name",
+              "field": "display_name",
+              "in": "query",
+              "type": "string-list",
+              "description": "Return only merchants with these display names, comma-separated. Matched exactly, including case."
+            },
+            {
+              "name": "external-id",
+              "field": "external_id",
+              "in": "query",
+              "type": "string-list",
+              "description": "Return only merchants with these external ids, comma-separated"
+            },
+            {
+              "name": "include-archived",
+              "field": "include_archived",
+              "in": "query",
+              "type": "boolean",
+              "description": "Include archived merchants, which are excluded by default"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Merchants to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Merchants to skip before the first returned"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order. Sortable fields: display_name, external_id, support_email, created_at"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-merchant",
+          "summary": "Create a merchant",
+          "description": "Registers a business you sell on behalf of. Invoices and receipts issued for a merchant carry its name and logo, while your legal entity stays the seller of record and keeps the contract, the payment and the tax liability. A merchant is display identity only: it has no tax or legal configuration of its own.",
+          "httpMethod": "POST",
+          "apiPath": "/merchants",
+          "options": [
+            {
+              "name": "display-name",
+              "field": "display_name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Name shown on the documents and emails issued for this merchant"
+            },
+            {
+              "name": "external-id",
+              "field": "external_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Your own identifier for the merchant, unique within your organization."
+            },
+            {
+              "name": "support-email",
+              "field": "support_email",
+              "in": "body",
+              "type": "string",
+              "description": "Support address shown to this merchant's buyers. Omit it to show yours instead."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "display_name",
+            "external_id"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-merchant",
+          "summary": "Get a merchant",
+          "description": "Fetches a single merchant. Archived merchants still resolve, so documents issued before they were archived keep rendering.",
+          "httpMethod": "GET",
+          "apiPath": "/merchants/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the merchant"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "operationId": "delete-merchant",
+          "summary": "Archive a merchant",
+          "description": "Retires a merchant. Merchants are never deleted, because the documents already issued for them still need their branding: an archived merchant keeps rendering on those, but takes no new attribution — a tax calculation naming it is rejected. Idempotent, and the original archive time is kept. Returns the merchant with `archived_at` set.",
+          "httpMethod": "DELETE",
+          "apiPath": "/merchants/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the merchant"
+            }
+          ],
+          "requireConfirmation": "This operation archives the merchant. Unarchive it to use it again."
+        },
+        {
+          "name": "update",
+          "operationId": "update-merchant",
+          "summary": "Update a merchant",
+          "description": "Updates a merchant. Only the fields you send are changed: omit a field to leave it alone, send an empty value to clear it. Renames and new branding apply the next time a document is rendered, including documents issued earlier.",
+          "httpMethod": "PATCH",
+          "apiPath": "/merchants/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the merchant"
+            }
+          ],
+          "options": [
+            {
+              "name": "display-name",
+              "field": "display_name",
+              "in": "body",
+              "type": "string",
+              "description": "Name shown on co-branded documents and emails"
+            },
+            {
+              "name": "external-id",
+              "field": "external_id",
+              "in": "body",
+              "type": "string",
+              "description": "Your own identifier for the merchant, unique within your organization"
+            },
+            {
+              "name": "support-email",
+              "field": "support_email",
+              "in": "body",
+              "type": "string",
+              "description": "Support address shown to this merchant's buyers. Send an empty string to fall back to yours."
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "unarchive",
+          "operationId": "unarchive-merchant",
+          "summary": "Unarchive a merchant",
+          "description": "Returns an archived merchant to active use, so new documents can be issued for it again. Idempotent.",
+          "httpMethod": "POST",
+          "apiPath": "/merchants/{id}/unarchive",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the merchant"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "metrics",
+      "description": "Billable metrics, which turn usage events into billable quantities.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-metrics",
+          "summary": "List billable metrics",
+          "description": "Returns a paginated list of billable metrics. Supports filtering by event name, aggregation method, aggregation field, and tag IDs. Results can be sorted by name.",
+          "epilogue": "Example:\n  alguna metrics list --event-name api_call,storage_gb",
+          "httpMethod": "GET",
+          "apiPath": "/metrics",
+          "options": [
+            {
+              "name": "aggregation-field",
+              "field": "aggregation_field",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by aggregation field (comma-separated to match any)"
+            },
+            {
+              "name": "aggregation-method",
+              "field": "aggregation_method",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by aggregation method (comma-separated to match any)"
+            },
+            {
+              "name": "event-name",
+              "field": "event_name",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by event name (comma-separated to match any)"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order"
+            },
+            {
+              "name": "tag-ids",
+              "field": "tag_ids",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by tag IDs (comma-separated to match any)"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-metric",
+          "summary": "Create a billable metric",
+          "description": "Defines a new billable metric. A metric specifies the event name, optional filter groups, and aggregation logic that turns raw ingested events into a quantity the billing engine can price against.",
+          "httpMethod": "POST",
+          "apiPath": "/metrics",
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Description of the metric"
+            },
+            {
+              "name": "event-name",
+              "field": "event_name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Event name that triggers this metric"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Name of the metric"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "aggregation",
+            "event_name",
+            "name"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-metric",
+          "summary": "Get a billable metric",
+          "description": "Fetches a single billable metric by ID, including its filter groups and aggregation logic.",
+          "httpMethod": "GET",
+          "apiPath": "/metrics/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the metric"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "description": "Payments collected from customers.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-payments",
+          "summary": "List payments",
+          "description": "Returns a list of payments. Supports filtering by customer account ID and invoice ID.",
+          "epilogue": "Example:\n  alguna payments list --invoice-id inv_123",
+          "httpMethod": "GET",
+          "apiPath": "/payments",
+          "options": [
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by customer ID"
+            },
+            {
+              "name": "invoice-id",
+              "field": "invoice_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by invoice ID"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "get",
+          "operationId": "get-payment",
+          "summary": "Get a payment",
+          "description": "Fetches a single payment by ID.",
+          "httpMethod": "GET",
+          "apiPath": "/payments/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the payment"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "plans",
+      "description": "Price plans, which subscriptions follow.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-plans",
+          "summary": "List plans",
+          "description": "Returns a paginated list of plans. Supports filtering by tag IDs.",
+          "epilogue": "Example (every plan, one JSON line each):\n  alguna plans list --all -o ndjson",
+          "httpMethod": "GET",
+          "apiPath": "/plans",
+          "options": [
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order"
+            },
+            {
+              "name": "tag-ids",
+              "field": "tag_ids",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by tag IDs (comma-separated to match any)"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-plan",
+          "summary": "Create a plan",
+          "description": "Creates a new plan with its full pricing template — name, currency, contract configuration, and the items (standalone priced products and/or bundles) that subscriptions will inherit. Optional fields cover plan-level discount, spend thresholds, price escalation, entitlements, tags, and invoice/email behavior.",
+          "httpMethod": "POST",
+          "apiPath": "/plans",
+          "options": [
+            {
+              "name": "additional-terms",
+              "field": "additional_terms",
+              "in": "body",
+              "type": "string",
+              "description": "Markdown additional terms appended to the contract"
+            },
+            {
+              "name": "auto-activate",
+              "field": "auto_activate",
+              "in": "body",
+              "type": "boolean",
+              "description": "Auto-activate subscriptions created from this plan"
+            },
+            {
+              "name": "auto-renew",
+              "field": "auto_renew",
+              "in": "body",
+              "type": "boolean",
+              "description": "Whether the plan auto-renews"
+            },
+            {
+              "name": "contract-duration",
+              "field": "contract_duration",
+              "in": "body",
+              "type": "integer",
+              "description": "Contract duration in months"
+            },
+            {
+              "name": "contract-period-type",
+              "field": "contract_period_type",
+              "in": "body",
+              "type": "string",
+              "description": "Contract period type",
+              "enum": [
+                "fixed",
+                "monthly_rolling"
+              ]
+            },
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "ISO 4217 currency code"
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Plan description"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Plan name"
+            },
+            {
+              "name": "payment-terms",
+              "field": "payment_terms",
+              "in": "body",
+              "type": "string",
+              "description": "Invoice payment terms"
+            },
+            {
+              "name": "renewal-duration",
+              "field": "renewal_duration",
+              "in": "body",
+              "type": "integer",
+              "description": "Renewal duration in months"
+            },
+            {
+              "name": "renewal-period-type",
+              "field": "renewal_period_type",
+              "in": "body",
+              "type": "string",
+              "description": "Renewal period type",
+              "enum": [
+                "fixed",
+                "monthly_rolling"
+              ]
+            },
+            {
+              "name": "trial-period-days",
+              "field": "trial_period_days",
+              "in": "body",
+              "type": "integer",
+              "description": "Trial period in days"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "currency",
+            "name"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-plan",
+          "summary": "Get a plan",
+          "description": "Fetches a single plan by ID, including its item set and pricing.",
+          "httpMethod": "GET",
+          "apiPath": "/plans/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the plan"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "portal",
+      "description": "Sessions that sign a customer in to the customer portal.",
+      "methods": [
+        {
+          "name": "create-session",
+          "operationId": "create-customer-portal-session",
+          "summary": "Create a customer portal session",
+          "description": "Creates a short-lived customer portal session and returns a signed URL the customer can use to access their billing portal. Sessions are single-use per token and expire after a short TTL.",
+          "epilogue": "Example:\n  alguna portal create-session --customer-id cus_123",
+          "httpMethod": "POST",
+          "apiPath": "/customer-portal-sessions",
+          "options": [
+            {
+              "name": "customer-alias",
+              "field": "customer_alias",
+              "in": "body",
+              "type": "string",
+              "description": "Alternative identifier (external ID) for the customer. Used when customer_id is not provided."
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "body",
+              "type": "string",
+              "description": "Customer ID the portal session is for. Either customer_id or customer_alias must be provided."
+            }
+          ],
+          "hasRequestBody": true
+        }
+      ]
+    },
+    {
+      "name": "products",
+      "description": "Products, which plans, bundles and invoices price.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-products",
+          "summary": "List products",
+          "description": "Returns a paginated list of products. Supports filtering by fee type (`fixed` or `metered`), payment terms (`advance` or `arrears`), and associated metric IDs.",
+          "httpMethod": "GET",
+          "apiPath": "/products",
+          "options": [
+            {
+              "name": "fee-type",
+              "field": "fee_type",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by fee type (comma-separated to match any)"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "metric-ids",
+              "field": "metric_ids",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by associated metric IDs (comma-separated to match any)"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "payment-terms",
+              "field": "payment_terms",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by payment terms (comma-separated to match any)"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-product",
+          "summary": "Create a product",
+          "description": "Creates a new product. Products are the billable unit on subscription items and define whether pricing is fixed or metered, the payment terms, the billing frequency, the SKU for downstream ERP systems, and the revenue allocation method. Metered products must be associated with one or more metrics.",
+          "httpMethod": "POST",
+          "apiPath": "/products",
+          "options": [
+            {
+              "name": "billing-frequency",
+              "field": "billing_frequency",
+              "in": "body",
+              "type": "string",
+              "description": "How often the product is billed. Required for fixed products; metered products are always recurring",
+              "enum": [
+                "recurring",
+                "one-off"
+              ]
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "A brief description of the product"
+            },
+            {
+              "name": "fee-type",
+              "field": "fee_type",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Whether the product is fixed-price or usage-based",
+              "enum": [
+                "fixed",
+                "metered"
+              ]
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "The name of the product"
+            },
+            {
+              "name": "payment-terms",
+              "field": "payment_terms",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "When the product is billed relative to the billing period. Metered products must be billed in arrears",
+              "enum": [
+                "advance",
+                "arrears"
+              ]
+            },
+            {
+              "name": "revenue-allocation-method",
+              "field": "revenue_allocation_method",
+              "in": "body",
+              "type": "string",
+              "description": "How revenue is allocated across time periods within a billing cycle",
+              "enum": [
+                "straight_line",
+                "usage_based",
+                "contract_level_straight_line"
+              ]
+            },
+            {
+              "name": "sku",
+              "field": "sku",
+              "in": "body",
+              "type": "string",
+              "description": "Stock keeping unit code used in external ERP or revenue recognition systems"
+            },
+            {
+              "name": "tax-code",
+              "field": "tax_code",
+              "in": "body",
+              "type": "string",
+              "description": "Canonical (provider-neutral) tax code. Omit for 'general' (standard-rated)."
+            },
+            {
+              "name": "unit-label-plural",
+              "field": "unit_label_plural",
+              "in": "body",
+              "type": "string",
+              "description": "Custom plural term for multiple units of the product (e.g. 'API calls'). Falls back to 'units' when omitted"
+            },
+            {
+              "name": "unit-label-singular",
+              "field": "unit_label_singular",
+              "in": "body",
+              "type": "string",
+              "description": "Custom singular term for one unit of the product (e.g. 'API call'). Falls back to 'unit' when omitted"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "fee_type",
+            "name",
+            "payment_terms"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-product",
+          "summary": "Get a product",
+          "description": "Fetches a single product by ID.",
+          "httpMethod": "GET",
+          "apiPath": "/products/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the product"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "operationId": "delete-product",
+          "summary": "Delete a product",
+          "description": "Soft-deletes a product. Products currently used on active subscriptions cannot be deleted.",
+          "httpMethod": "DELETE",
+          "apiPath": "/products/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the product"
+            }
+          ],
+          "requireConfirmation": "This operation deletes the product."
+        },
+        {
+          "name": "update",
+          "operationId": "update-product",
+          "summary": "Update a product",
+          "description": "Patches an existing product. Only the fields provided in the request body are modified.",
+          "httpMethod": "PATCH",
+          "apiPath": "/products/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the product"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "A brief description of the product"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "The name of the product"
+            },
+            {
+              "name": "revenue-allocation-method",
+              "field": "revenue_allocation_method",
+              "in": "body",
+              "type": "string",
+              "description": "How revenue is allocated across time periods within a billing cycle",
+              "enum": [
+                "straight_line",
+                "usage_based",
+                "contract_level_straight_line"
+              ]
+            },
+            {
+              "name": "sku",
+              "field": "sku",
+              "in": "body",
+              "type": "string",
+              "description": "Stock keeping unit code used in external ERP or revenue recognition systems"
+            },
+            {
+              "name": "tax-code",
+              "field": "tax_code",
+              "in": "body",
+              "type": "string",
+              "description": "Canonical (provider-neutral) tax code. Omit for 'general' (standard-rated)."
+            },
+            {
+              "name": "unit-label-plural",
+              "field": "unit_label_plural",
+              "in": "body",
+              "type": "string",
+              "description": "Custom plural term for multiple units of the product (e.g. 'API calls'). Falls back to 'units' when omitted"
+            },
+            {
+              "name": "unit-label-singular",
+              "field": "unit_label_singular",
+              "in": "body",
+              "type": "string",
+              "description": "Custom singular term for one unit of the product (e.g. 'API call'). Falls back to 'unit' when omitted"
+            }
+          ],
+          "hasRequestBody": true
+        }
+      ]
+    },
+    {
+      "name": "quotes",
+      "description": "Quotes and their phases, from draft to signed and active.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-quotes",
+          "summary": "List quotes",
+          "description": "Returns a paginated list of quotes, filterable by subscription, kind, and status.",
+          "httpMethod": "GET",
+          "apiPath": "/quotes",
+          "options": [
+            {
+              "name": "kind",
+              "field": "kind",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by quote kind",
+              "enum": [
+                "new",
+                "renewal",
+                "amendment"
+              ]
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Page size"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of quotes to skip"
+            },
+            {
+              "name": "status",
+              "field": "status",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by document status",
+              "enum": [
+                "draft",
+                "pending_approval",
+                "sent",
+                "signed",
+                "rejected",
+                "withdrawn",
+                "expired"
+              ]
+            },
+            {
+              "name": "subscription-id",
+              "field": "subscription_id",
+              "in": "query",
+              "type": "string",
+              "description": "Only quotes documenting this subscription"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-quote",
+          "summary": "Create a quote",
+          "description": "Creates a quote, in `draft`. A new-business quote starts from a plan, duplicates an existing subscription using `source_subscription_id`, or starts from a blank canvas with `items` (single phase) or `phases` (ramp); its phases are read and edited under `/quotes/{id}/phases` until the quote is activated. An amendment quote names the active subscription it amends (`amends_subscription_id`) and carries the changed phase in `phases`; it may be issued immediately, so branch on `status` and read `signing_url` when it is present.",
+          "httpMethod": "POST",
+          "apiPath": "/quotes",
+          "options": [
+            {
+              "name": "amends-subscription-id",
+              "field": "amends_subscription_id",
+              "in": "body",
+              "type": "string",
+              "description": "Amend this active subscription. Takes exactly one entry in phases, with a start_date, and no other origin."
+            },
+            {
+              "name": "auto-activate",
+              "field": "auto_activate",
+              "in": "body",
+              "type": "boolean",
+              "description": "Whether the subscription takes effect on its own once signed: a new-business quote activates at its contract start, an amendment applies immediately. Defaults to the plan's or organization's setting for new business, and to true for an amendment; each quote keeps its own value."
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Customer ID. For an amendment, must be the subscription's customer."
+            },
+            {
+              "name": "expires-at",
+              "field": "expires_at",
+              "in": "body",
+              "type": "string",
+              "description": "When the signing offer lapses. Defaults to the organization's quote expiry window."
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "Names the subscription a blank-canvas quote creates. Only valid when neither plan_id nor source_subscription_id is provided; a plan or duplicate names itself."
+            },
+            {
+              "name": "plan-id",
+              "field": "plan_id",
+              "in": "body",
+              "type": "string",
+              "description": "Seed the quote from a plan. The quote inherits the plan's pricing. Mutually exclusive with source_subscription_id and price_book_id."
+            },
+            {
+              "name": "price-book-id",
+              "field": "price_book_id",
+              "in": "body",
+              "type": "string",
+              "description": "Price book a blank-canvas quote draws its pricing from. Mutually exclusive with plan_id and source_subscription_id."
+            },
+            {
+              "name": "source-subscription-id",
+              "field": "source_subscription_id",
+              "in": "body",
+              "type": "string",
+              "description": "Duplicate an existing subscription into a new quote. Mutually exclusive with plan_id and price_book_id."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "customer_id"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-quote",
+          "summary": "Get a quote",
+          "description": "Returns a quote, including its `signing_url` while a customer signature is pending. Whether the deal is in effect is the state of `subscription_id`, not of the quote: a signed quote stays `signed`, so read that subscription to see activation.",
+          "httpMethod": "GET",
+          "apiPath": "/quotes/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ]
+        },
+        {
+          "name": "discard",
+          "operationId": "discard-quote",
+          "summary": "Discard a draft quote",
+          "description": "Deletes a draft quote and the draft subscription it documents, for a quote that was abandoned before anyone saw it. Requires `status` of `draft` and a new-business quote: once sent, a quote is a document someone may hold, so it is withdrawn rather than erased.",
+          "httpMethod": "DELETE",
+          "apiPath": "/quotes/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ],
+          "requireConfirmation": "This operation deletes the draft quote and its draft subscription."
+        },
+        {
+          "name": "update",
+          "operationId": "update-quote",
+          "summary": "Update a quote",
+          "description": "Updates a quote's name override and its signing deadline. The override names the quote, not the subscription; subscription content is edited through the quote's phases.",
+          "httpMethod": "PATCH",
+          "apiPath": "/quotes/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ],
+          "options": [
+            {
+              "name": "clear-expires-at",
+              "field": "clear_expires_at",
+              "in": "body",
+              "type": "boolean",
+              "description": "Make the signing offer open-ended."
+            },
+            {
+              "name": "clear-name",
+              "field": "clear_name",
+              "in": "body",
+              "type": "boolean",
+              "description": "Drop the override, falling back to the subscription's name."
+            },
+            {
+              "name": "expires-at",
+              "field": "expires_at",
+              "in": "body",
+              "type": "string",
+              "description": "Move the signing deadline. Ignored when clear_expires_at is true."
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "Name override for this quote. Does not rename the subscription. Ignored when clear_name is true."
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "activate",
+          "operationId": "activate-quote",
+          "summary": "Activate a signed quote",
+          "description": "Puts a signed quote into effect: requires `status` of `signed`. A new-business quote activates its subscription; an amendment publishes its phase onto the live subscription. Quotes with `auto_activate` take effect on their own once signed (a new-business quote at its contract start), so this is only needed for manual activation. The quote itself stays `signed` — read `subscription_id` to confirm the deal is live.",
+          "httpMethod": "POST",
+          "apiPath": "/quotes/{id}/activate",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ]
+        },
+        {
+          "name": "mark-signed-offline",
+          "operationId": "mark-quote-signed-offline",
+          "summary": "Mark a quote as signed offline",
+          "description": "Records a signature captured outside the hosted signing page, for consumers that collect signer consent through their own e-sign flow. Accepts a `draft` quote, issuing it first so no live Alguna signing link has to be created for a document signed elsewhere, or one already `sent`. The quote moves to `signed` and the subscription to `accepted`, exactly as a hosted signature would. When issuing a `draft` quote needs approval, the call fails with the pending approval flow and records no signature; after approval issues the quote, call this again with a signature that applies to the issued terms. `signed_at` must lie between the quote's creation and now.",
+          "httpMethod": "POST",
+          "apiPath": "/quotes/{id}/mark-signed-offline",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ],
+          "options": [
+            {
+              "name": "signed-at",
+              "field": "signed_at",
+              "in": "body",
+              "type": "string",
+              "description": "When the signer consented, as captured by your e-sign flow. Defaults to now."
+            },
+            {
+              "name": "signer-email",
+              "field": "signer_email",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Signer's email."
+            },
+            {
+              "name": "signer-name",
+              "field": "signer_name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Full name of the signer."
+            },
+            {
+              "name": "signer-role",
+              "field": "signer_role",
+              "in": "body",
+              "type": "string",
+              "description": "Signer's job title."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "signer_email",
+            "signer_name"
+          ]
+        },
+        {
+          "name": "get-pdf",
+          "operationId": "get-quote-pdf",
+          "summary": "Download a quote PDF",
+          "description": "Returns the quote document as a binary `application/pdf` response: the PDF the customer signed, or the currently issued one while the quote is out for signature. Returns `404` when there is no issued document — a quote still in `draft`, or a withdrawn amendment, whose staged phase the withdrawal discarded.",
+          "httpMethod": "GET",
+          "apiPath": "/quotes/{id}/pdf",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ],
+          "binary": true
+        },
+        {
+          "name": "list-phases",
+          "operationId": "list-quote-phases",
+          "summary": "List quote phases",
+          "description": "Returns the priced phases a quote proposes, in schedule order, each with its revenue totals. An amendment quote has the single phase it was issued for. `sequence` is the position in that order, not an identifier — deleting a phase renumbers the rest, so address a phase by its `id`. Each phase is the subscription version it becomes: once the quote is signed the same rows are readable on the subscription.",
+          "httpMethod": "GET",
+          "apiPath": "/quotes/{id}/phases",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ]
+        },
+        {
+          "name": "create-phase",
+          "operationId": "create-quote-phase",
+          "summary": "Add a quote phase",
+          "description": "Stages a further priced phase on a new-business quote that has not been signed. Name its start as a date or as months after the billing start.",
+          "httpMethod": "POST",
+          "apiPath": "/quotes/{id}/phases",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Human-readable note on the phase"
+            },
+            {
+              "name": "start-date",
+              "field": "start_date",
+              "in": "body",
+              "type": "string",
+              "description": "When the phase starts (YYYY-MM-DD). Alternative to start_month_offset."
+            },
+            {
+              "name": "start-month-offset",
+              "field": "start_month_offset",
+              "in": "body",
+              "type": "integer",
+              "description": "Months after the billing start when the phase begins; resolved into a date at signature. Alternative to start_date."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "items"
+          ]
+        },
+        {
+          "name": "get-phase",
+          "operationId": "get-quote-phase",
+          "summary": "Get a quote phase",
+          "description": "Returns one of the quote's phases with its revenue totals.",
+          "httpMethod": "GET",
+          "apiPath": "/quotes/{id}/phases/{pid}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            },
+            {
+              "name": "pid",
+              "description": "Unique identifier for the phase"
+            }
+          ]
+        },
+        {
+          "name": "replace-phase",
+          "operationId": "replace-quote-phase",
+          "summary": "Replace a quote phase",
+          "description": "Replaces the items and start of one of the quote's draft phases. Send the complete item set; items you omit are removed. Phases publish when the quote is sent and cannot change after that.",
+          "httpMethod": "PUT",
+          "apiPath": "/quotes/{id}/phases/{pid}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            },
+            {
+              "name": "pid",
+              "description": "Unique identifier for the phase"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Human-readable note on the phase"
+            },
+            {
+              "name": "start-date",
+              "field": "start_date",
+              "in": "body",
+              "type": "string",
+              "description": "When the phase starts (YYYY-MM-DD). Alternative to start_month_offset."
+            },
+            {
+              "name": "start-month-offset",
+              "field": "start_month_offset",
+              "in": "body",
+              "type": "integer",
+              "description": "Months after the billing start when the phase begins; resolved into a date at signature. Alternative to start_date."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "items"
+          ]
+        },
+        {
+          "name": "delete-phase",
+          "operationId": "delete-quote-phase",
+          "summary": "Delete a quote phase",
+          "description": "Discards one of the quote's draft phases. Phases publish when the quote is sent and cannot be deleted after that.",
+          "httpMethod": "DELETE",
+          "apiPath": "/quotes/{id}/phases/{pid}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            },
+            {
+              "name": "pid",
+              "description": "Unique identifier for the phase"
+            }
+          ],
+          "requireConfirmation": "This operation deletes the draft quote phase."
+        },
+        {
+          "name": "list-phase-items",
+          "operationId": "list-quote-phase-items",
+          "summary": "List quote phase items",
+          "description": "Returns the priced items of one of the quote's phases.",
+          "httpMethod": "GET",
+          "apiPath": "/quotes/{id}/phases/{pid}/items",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            },
+            {
+              "name": "pid",
+              "description": "Unique identifier for the phase"
+            }
+          ]
+        },
+        {
+          "name": "send-for-signature",
+          "operationId": "send-quote-for-signature",
+          "summary": "Send a quote for signature",
+          "description": "Issues a quote revision (snapshot + rendered PDF) and moves the quote to `sent`, returning it with the `signing_url` for the customer to review and sign. Requires `draft`, `rejected` or `pending_approval`, and only a new-business quote: an amendment is issued when it is created. Omit `signer_email` to send no invitation and share the link yourself. When issuing needs approval, the call fails with the pending approval flow and the quote is not issued until that approval completes; repeating the call meanwhile returns the same pending flow.",
+          "httpMethod": "POST",
+          "apiPath": "/quotes/{id}/send",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ],
+          "options": [
+            {
+              "name": "signer-email",
+              "field": "signer_email",
+              "in": "body",
+              "type": "string",
+              "description": "Email the signing link is sent to. When omitted no email is sent; share signing_url yourself."
+            },
+            {
+              "name": "signer-name",
+              "field": "signer_name",
+              "in": "body",
+              "type": "string",
+              "description": "Name of the person expected to sign, recorded on the signature session."
+            },
+            {
+              "name": "signer-role",
+              "field": "signer_role",
+              "in": "body",
+              "type": "string",
+              "description": "Signer's job title, recorded on the signature session."
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "withdraw",
+          "operationId": "withdraw-quote",
+          "summary": "Withdraw a quote",
+          "description": "Cancels a quote that is out for signature: requires `status` of `sent`. Withdrawing a new-business quote withdraws its subscription and keeps the issued document; withdrawing an amendment discards the staged draft phase, so its document no longer renders. Use Discard a draft quote for one that was never sent.",
+          "httpMethod": "POST",
+          "apiPath": "/quotes/{id}/withdraw",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the quote"
+            }
+          ],
+          "options": [
+            {
+              "name": "reason",
+              "field": "reason",
+              "in": "body",
+              "type": "string",
+              "description": "Optional reason recorded on the withdrawal."
+            }
+          ],
+          "hasRequestBody": true,
+          "requireConfirmation": "This operation withdraws the quote, so the customer can no longer sign it. It cannot be reversed."
+        }
+      ]
+    },
+    {
+      "name": "refunds",
+      "description": "Money returned to a customer for a payment.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-refunds",
+          "summary": "List refunds",
+          "description": "Returns a paginated list of refunds. Supports filtering by status, currency, customer, and payment. Sortable by status, amount, currency, and created date.",
+          "httpMethod": "GET",
+          "apiPath": "/refunds",
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by ISO 4217 currency code"
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by customer ID"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "payment-id",
+              "field": "payment_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by payment ID"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order"
+            },
+            {
+              "name": "status",
+              "field": "status",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by refund status. Pass a comma-separated list to match any."
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-refund",
+          "summary": "Create a refund",
+          "description": "Creates a refund against a payment. For partial or full refunds of invoices, prefer issuing a credit note first via Create Credit Note and applying it, which handles accounting and gives the customer a paper trail. Direct refunds are best for cases where no credit note is needed.",
+          "httpMethod": "POST",
+          "apiPath": "/refunds",
+          "options": [
+            {
+              "name": "amount",
+              "field": "amount",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Refund amount"
+            },
+            {
+              "name": "payment-id",
+              "field": "payment_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "The payment to refund"
+            },
+            {
+              "name": "reason",
+              "field": "reason",
+              "in": "body",
+              "type": "string",
+              "description": "Reason for the refund"
+            },
+            {
+              "name": "statement-descriptor",
+              "field": "statement_descriptor",
+              "in": "body",
+              "type": "string",
+              "description": "Text that appears on the customer's bank statement"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "amount",
+            "payment_id"
+          ],
+          "requireConfirmation": "This operation sends money back to the customer. It cannot be reversed."
+        },
+        {
+          "name": "get",
+          "operationId": "get-refund",
+          "summary": "Get a refund",
+          "description": "Fetches a single refund by ID.",
+          "httpMethod": "GET",
+          "apiPath": "/refunds/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the refund"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "revenue-schedules",
+      "description": "Recognized and deferred revenue over time.",
+      "methods": [
+        {
+          "name": "get",
+          "operationId": "get-revenue-schedule",
+          "summary": "Get organization revenue schedule",
+          "description": "Returns the revenue schedule for the entire organization, showing projected recognized, deferred, and metered revenue over time.",
+          "httpMethod": "GET",
+          "apiPath": "/revenue-schedules",
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "query",
+              "type": "string",
+              "description": "Target currency for conversion. Uses the entity's default if not specified."
+            },
+            {
+              "name": "interval",
+              "field": "interval",
+              "in": "query",
+              "type": "string",
+              "description": "Time interval for schedule entries",
+              "enum": [
+                "daily",
+                "monthly"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "get-by-customer",
+          "operationId": "get-revenue-schedule-by-customer",
+          "summary": "Get revenue schedule for a customer",
+          "description": "Returns the aggregated revenue schedule for all of a customer's subscriptions and ad-hoc invoices.",
+          "epilogue": "Example:\n  alguna revenue-schedules get-by-customer cus_123 --interval monthly",
+          "httpMethod": "GET",
+          "apiPath": "/revenue-schedules/customer/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the customer"
+            }
+          ],
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "query",
+              "type": "string",
+              "description": "Target currency for conversion. Uses the entity's default if not specified."
+            },
+            {
+              "name": "interval",
+              "field": "interval",
+              "in": "query",
+              "type": "string",
+              "description": "Time interval for schedule entries",
+              "enum": [
+                "daily",
+                "monthly"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "get-by-legal-entity",
+          "operationId": "get-revenue-schedule-by-legal-entity",
+          "summary": "Get revenue schedule for a legal entity",
+          "description": "Returns the aggregated revenue schedule for all subscriptions and invoices under a legal entity.",
+          "httpMethod": "GET",
+          "apiPath": "/revenue-schedules/legal-entity/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the legal-entity"
+            }
+          ],
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "query",
+              "type": "string",
+              "description": "Target currency for conversion. Uses the entity's default if not specified."
+            },
+            {
+              "name": "interval",
+              "field": "interval",
+              "in": "query",
+              "type": "string",
+              "description": "Time interval for schedule entries",
+              "enum": [
+                "daily",
+                "monthly"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "get-by-subscription",
+          "operationId": "get-revenue-schedule-by-subscription",
+          "summary": "Get revenue schedule for a subscription",
+          "description": "Returns the revenue schedule for a single subscription, showing projected recognized, deferred, and metered revenue over time.",
+          "httpMethod": "GET",
+          "apiPath": "/revenue-schedules/subscription/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "query",
+              "type": "string",
+              "description": "Target currency for conversion. Uses the entity's default if not specified."
+            },
+            {
+              "name": "interval",
+              "field": "interval",
+              "in": "query",
+              "type": "string",
+              "description": "Time interval for schedule entries",
+              "enum": [
+                "daily",
+                "monthly"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "subscription-changes",
+      "description": "Changes to a subscription, applied or previewed.",
+      "methods": [
+        {
+          "name": "create",
+          "operationId": "create-subscription-change",
+          "summary": "Apply changes to a subscription",
+          "description": "Applies a delta (`add`, `remove`, `update`) on top of a source version. The API computes the new version, creates it, and publishes it unless `draft: true` is set. The `effective` field controls when the change takes effect (keyword or specific date). This is the high-level mutation endpoint. See the [Updating a Subscription](https://alguna.com/docs/api-reference/v2/examples/updating-a-subscription) examples for concrete bodies covering price adjustments, plan swaps, bundle operations, and tier replacements.",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions/{id}/changes",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Human-readable audit note"
+            },
+            {
+              "name": "draft",
+              "field": "draft",
+              "in": "body",
+              "type": "boolean",
+              "description": "Create as draft (true) or auto-publish (false, default)"
+            },
+            {
+              "name": "effective",
+              "field": "effective",
+              "in": "body",
+              "type": "string",
+              "description": "When the change takes effect. One of: 'immediate' (now), 'next_term_renewal' (contract end), 'next_billing_period' (start of the next invoicing cycle), an ISO 8601 date (YYYY-MM-DD), or an RFC3339 timestamp (e.g. 2027-01-01T14:30:00Z)."
+            },
+            {
+              "name": "plan-id",
+              "field": "plan_id",
+              "in": "body",
+              "type": "string",
+              "description": "Swap to a new plan (provides base item set)"
+            },
+            {
+              "name": "source-version-id",
+              "field": "source_version_id",
+              "in": "body",
+              "type": "string",
+              "description": "Version to compute deltas against (default: current active)"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "preview",
+          "operationId": "preview-subscription-change",
+          "summary": "Preview a subscription change",
+          "description": "Computes the same delta as Apply Changes to a Subscription without writing a new version. Use this to drive approval flows or show the customer what is about to change before committing. See the [Updating a Subscription](https://alguna.com/docs/api-reference/v2/examples/updating-a-subscription) examples.",
+          "epilogue": "Example (change.json holds the add, remove and update lists):\n  alguna subscription-changes preview sub_123 --body @change.json",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions/{id}/changes/preview",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Human-readable audit note"
+            },
+            {
+              "name": "draft",
+              "field": "draft",
+              "in": "body",
+              "type": "boolean",
+              "description": "Create as draft (true) or auto-publish (false, default)"
+            },
+            {
+              "name": "effective",
+              "field": "effective",
+              "in": "body",
+              "type": "string",
+              "description": "When the change takes effect. One of: 'immediate' (now), 'next_term_renewal' (contract end), 'next_billing_period' (start of the next invoicing cycle), an ISO 8601 date (YYYY-MM-DD), or an RFC3339 timestamp (e.g. 2027-01-01T14:30:00Z)."
+            },
+            {
+              "name": "plan-id",
+              "field": "plan_id",
+              "in": "body",
+              "type": "string",
+              "description": "Swap to a new plan (provides base item set)"
+            },
+            {
+              "name": "source-version-id",
+              "field": "source_version_id",
+              "in": "body",
+              "type": "string",
+              "description": "Version to compute deltas against (default: current active)"
+            }
+          ],
+          "hasRequestBody": true
+        }
+      ]
+    },
+    {
+      "name": "subscriptions",
+      "description": "Subscriptions, from draft to active to cancelled.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-subscriptions",
+          "summary": "List subscriptions",
+          "description": "Returns a paginated list of subscriptions. Supports filtering by status, customer ID, and tag IDs.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions",
+          "options": [
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by customer ID"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order. Sortable fields: name, status, created_at, activated_at, ended_at, updated_at, contract_start_date, contract_end_date"
+            },
+            {
+              "name": "status",
+              "field": "status",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by subscription status. Pass a comma-separated list to match any."
+            },
+            {
+              "name": "tag-ids",
+              "field": "tag_ids",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by tag IDs (comma-separated to match any)"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-subscription",
+          "summary": "Create a subscription",
+          "description": "Creates a new subscription for a customer. Supports three creation patterns: raw pricing in the request body, from a plan, or from a plan with per-customer overrides. Subscriptions are created in `draft` status and must be activated unless `auto_activate: true` is set. See the [Creating a Subscription](https://alguna.com/docs/api-reference/v2/examples/creating-a-subscription) examples for concrete request bodies and the bundle variants.",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions",
+          "options": [
+            {
+              "name": "auto-activate",
+              "field": "auto_activate",
+              "in": "body",
+              "type": "boolean",
+              "description": "Auto-activate after creation"
+            },
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "description": "Currency code. Required when plan_id is not provided. When plan_id is set, defaults to the customer's currency."
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Customer ID"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "Subscription name"
+            },
+            {
+              "name": "plan-id",
+              "field": "plan_id",
+              "in": "body",
+              "type": "string",
+              "description": "Plan ID to use as the base item set (optional)"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "customer_id"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-subscription",
+          "summary": "Get a subscription",
+          "description": "Fetches a single subscription by ID, including the current active version reference and any pending future versions.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "operationId": "delete-subscription",
+          "summary": "Delete a draft subscription",
+          "description": "Permanently deletes a draft subscription. Only draft subscriptions can be deleted. Use cancel for subscriptions that have already been activated.",
+          "httpMethod": "DELETE",
+          "apiPath": "/subscriptions/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "requireConfirmation": "This operation deletes the draft subscription."
+        },
+        {
+          "name": "update",
+          "operationId": "update-subscription",
+          "summary": "Update a subscription",
+          "description": "Patches metadata on a subscription: name, description, trial period, billing flags, subscription-level discount, spending thresholds, price escalation, and tags. This endpoint does not modify the priced item set. To change items, see the [Updating a Subscription](https://alguna.com/docs/api-reference/v2/examples/updating-a-subscription) examples. When an edit of a `sent` subscription saves its terms but the offer is not reissued with them, the call fails with a message that says so and the terms stay saved but cannot be signed; send this request again with an empty body to retry issuing the saved terms.",
+          "httpMethod": "PATCH",
+          "apiPath": "/subscriptions/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Description"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "Subscription name"
+            },
+            {
+              "name": "trial-period-days",
+              "field": "trial_period_days",
+              "in": "body",
+              "type": "integer",
+              "description": "Trial period in days"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "activate",
+          "operationId": "activate-subscription",
+          "summary": "Activate a subscription",
+          "description": "Transitions a draft subscription to `active` so it becomes effective for the customer. Idempotent: activating an already-active subscription returns the current state. See the [Creating a Subscription](https://alguna.com/docs/api-reference/v2/examples/creating-a-subscription) examples for the full creation flow.",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions/{id}/activate",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        },
+        {
+          "name": "get-billing-dates",
+          "operationId": "get-subscription-billing-dates",
+          "summary": "Get valid billing dates for a subscription",
+          "description": "Returns the current billing cycle range, the list of valid dates for on-cycle version starts, the valid date range for mid-cycle changes, the contract end date, and the next renewal date. Use this to drive date pickers in UI flows that schedule future changes.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/billing-dates",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        },
+        {
+          "name": "cancel",
+          "operationId": "cancel-subscription",
+          "summary": "Cancel a subscription",
+          "description": "Schedules a cancellation for a subscription. The `effective` timing can be a keyword (e.g. `immediate`, `end_of_term`) or a specific date. A cancellation reason code is required and a free-text note is optional.",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions/{id}/cancel",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "effective",
+              "field": "effective",
+              "in": "body",
+              "type": "string",
+              "description": "When cancellation takes effect"
+            },
+            {
+              "name": "reason",
+              "field": "reason",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Cancellation reason",
+              "enum": [
+                "no_longer_required",
+                "moving_provider",
+                "pricing",
+                "support",
+                "features",
+                "upgraded",
+                "other"
+              ]
+            },
+            {
+              "name": "reason-description",
+              "field": "reason_description",
+              "in": "body",
+              "type": "string",
+              "description": "Additional context for the cancellation"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "reason"
+          ],
+          "requireConfirmation": "This operation schedules the end of the subscription. It cannot be reversed."
+        },
+        {
+          "name": "get-credit-balance",
+          "operationId": "get-subscription-credit-balance",
+          "summary": "Get the monetary credit balance for a subscription",
+          "description": "Returns the customer's monetary credit balance applicable to this subscription, evaluated at the `as_of` timestamp (defaults to now). Expired grants are excluded from the returned balance.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/credits/balance",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "as-of",
+              "field": "as_of",
+              "in": "query",
+              "type": "string",
+              "description": "Point in time to evaluate the balance at (RFC3339). Defaults to now."
+            }
+          ]
+        },
+        {
+          "name": "create-credit-grant",
+          "operationId": "create-subscription-credit-grant",
+          "summary": "Grant credits to a subscription",
+          "description": "Creates a monetary API-granted credit on a subscription. The grant is immediately available for consumption.",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions/{id}/credits/grant",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "amount",
+              "field": "amount",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Credit amount to grant"
+            },
+            {
+              "name": "credit-type",
+              "field": "credit_type",
+              "in": "body",
+              "type": "string",
+              "description": "Type of credit",
+              "enum": [
+                "monetary",
+                "units"
+              ]
+            },
+            {
+              "name": "expires-at",
+              "field": "expires_at",
+              "in": "body",
+              "type": "string",
+              "description": "When the credit grant expires"
+            },
+            {
+              "name": "reason",
+              "field": "reason",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Reason for the credit grant"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "amount",
+            "reason"
+          ]
+        },
+        {
+          "name": "list-entitlements",
+          "operationId": "list-subscription-entitlements",
+          "summary": "List active entitlements",
+          "description": "Returns every entitlement active on the subscription's current published version, including static boolean/number/string entitlements and grant-based credit allocations.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/entitlements",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        },
+        {
+          "name": "get-entitlement",
+          "operationId": "get-subscription-entitlement",
+          "summary": "Get a specific entitlement",
+          "description": "Fetches a single active entitlement on a subscription by its entitlement key.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/entitlements/{key}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            },
+            {
+              "name": "key",
+              "description": "Unique identifier for the entitlement"
+            }
+          ]
+        },
+        {
+          "name": "download-pdf",
+          "operationId": "download-subscription-pdf",
+          "summary": "Download a subscription PDF",
+          "description": "Returns the signed contract PDF for a subscription as a binary `application/pdf` response. The document reflects the contract as it was agreed upon with the customer at the point of signing. Returns `404` if the order form was not signed through Alguna and no PDF exists.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/pdf",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "binary": true
+        },
+        {
+          "name": "get-revenue",
+          "operationId": "get-subscription-revenue",
+          "summary": "Get subscription revenue metrics",
+          "description": "Returns the monthly recurring revenue (MRR), annual recurring revenue (ARR), and annual contract value (ACV) for the subscription's current active version.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/revenue",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "subscription-versions",
+      "description": "The draft and published versions of a subscription.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-subscription-versions",
+          "summary": "List subscription versions",
+          "description": "Returns every version attached to a subscription: drafts, the currently active published version, and any future pending versions.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/versions",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        },
+        {
+          "name": "create",
+          "operationId": "create-subscription-version",
+          "summary": "Create a new subscription version",
+          "description": "Creates a new version from a complete item set. Returns a draft by default that can be edited and published later. This is the snapshot-based mutation path (Path B) for full control over the version contents. For the delta-based alternative, use the Apply Changes to a Subscription endpoint. See the [Updating a Subscription](https://alguna.com/docs/api-reference/v2/examples/updating-a-subscription) examples.",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions/{id}/versions",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Human-readable audit note"
+            },
+            {
+              "name": "draft",
+              "field": "draft",
+              "in": "body",
+              "type": "boolean",
+              "description": "Create as draft (true) or auto-publish (false, default)"
+            },
+            {
+              "name": "effective-at",
+              "field": "effective_at",
+              "in": "body",
+              "type": "string",
+              "description": "When the version takes effect (ISO 8601 date, YYYY-MM-DD). Defaults to today."
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "items"
+          ]
+        },
+        {
+          "name": "get-current",
+          "operationId": "get-current-subscription-version",
+          "summary": "Get the current active subscription version",
+          "description": "Returns the subscription version that is currently in effect. This is the published version whose start date has passed and whose end date is either in the future or null. Returns 404 if the subscription has no active published version.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/versions/current",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            }
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-subscription-version",
+          "summary": "Get a subscription version",
+          "description": "Fetches a single version by ID, including its priced items and entitlements.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/versions/{vid}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            },
+            {
+              "name": "vid",
+              "description": "Unique identifier for the version"
+            }
+          ]
+        },
+        {
+          "name": "replace",
+          "operationId": "replace-subscription-version",
+          "summary": "Replace a draft subscription version",
+          "description": "Replaces the contents of a draft version in place. Snapshot-based: send the full intended item set. Items you omit are removed. Only draft versions can be replaced, published versions are immutable. See the [Updating a Subscription](https://alguna.com/docs/api-reference/v2/examples/updating-a-subscription) examples.",
+          "httpMethod": "PUT",
+          "apiPath": "/subscriptions/{id}/versions/{vid}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            },
+            {
+              "name": "vid",
+              "description": "Unique identifier for the version"
+            }
+          ],
+          "options": [
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Human-readable audit note"
+            },
+            {
+              "name": "effective-at",
+              "field": "effective_at",
+              "in": "body",
+              "type": "string",
+              "description": "Updated effective date (ISO 8601 date, YYYY-MM-DD)"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "items"
+          ]
+        },
+        {
+          "name": "delete",
+          "operationId": "delete-subscription-version",
+          "summary": "Delete a subscription version",
+          "description": "Discards an unwanted draft version. Published versions are immutable historical records and cannot be deleted, they must be superseded by creating a new version instead. See the [Updating a Subscription](https://alguna.com/docs/api-reference/v2/examples/updating-a-subscription) examples.",
+          "httpMethod": "DELETE",
+          "apiPath": "/subscriptions/{id}/versions/{vid}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            },
+            {
+              "name": "vid",
+              "description": "Unique identifier for the version"
+            }
+          ],
+          "requireConfirmation": "This operation deletes the draft subscription version."
+        },
+        {
+          "name": "get-item",
+          "operationId": "get-subscription-version-item",
+          "summary": "Get a subscription version item",
+          "description": "Fetches a single priced item from a version, addressed by either its product ID or its bundle ID. Bundle items return every child with its price.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/versions/{vid}/items/{ref}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            },
+            {
+              "name": "vid",
+              "description": "Unique identifier for the version"
+            },
+            {
+              "name": "ref",
+              "description": "Unique identifier for the item"
+            }
+          ]
+        },
+        {
+          "name": "publish",
+          "operationId": "publish-subscription-version",
+          "summary": "Publish a draft subscription version",
+          "description": "Publishes a draft version. If `effective_at` is in the past or today the version becomes the current active version immediately. Otherwise it sits as a pending change on the parent subscription until the effective date. See the [Updating a Subscription](https://alguna.com/docs/api-reference/v2/examples/updating-a-subscription) examples.",
+          "httpMethod": "POST",
+          "apiPath": "/subscriptions/{id}/versions/{vid}/publish",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            },
+            {
+              "name": "vid",
+              "description": "Unique identifier for the version"
+            }
+          ]
+        },
+        {
+          "name": "get-revenue",
+          "operationId": "get-subscription-version-revenue",
+          "summary": "Get subscription revenue metrics for a specific version",
+          "description": "Returns the monthly recurring revenue (MRR), annual recurring revenue (ARR), and annual contract value (ACV) computed from the pricing on the specified subscription version. This is the same calculation used in the Alguna dashboard subscription builder, so results match what is shown there one-to-one.",
+          "httpMethod": "GET",
+          "apiPath": "/subscriptions/{id}/versions/{vid}/revenue",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the subscription"
+            },
+            {
+              "name": "vid",
+              "description": "Unique identifier for the version"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tags",
+      "description": "Labels that you put on records.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-tags",
+          "summary": "List tags",
+          "description": "Returns a paginated list of the organization's tags, sorted by name. Use the returned IDs with the tag_ids filter on list endpoints such as customers, plans, invoices, subscriptions, and metrics.",
+          "epilogue": "Example:\n  alguna tags list --all",
+          "httpMethod": "GET",
+          "apiPath": "/tags",
+          "options": [
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "get",
+          "operationId": "get-tag",
+          "summary": "Get a tag",
+          "description": "Fetches a single tag by ID.",
+          "httpMethod": "GET",
+          "apiPath": "/tags/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the tag"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tax",
+      "description": "Tax calculations.",
+      "methods": [
+        {
+          "name": "list-calculations",
+          "operationId": "list-tax-calculations",
+          "summary": "List tax calculations",
+          "description": "Returns a paginated list of stored calculations, newest first, for reconciling what was quoted against what was issued. Each entry carries the total tax, whether the calculation was issued from and into which invoice, and whether it can still be issued from. Supports filtering by customer reference, currency, issued and expired state, and a tax date range. Per-line tax is on the get endpoint, not here.",
+          "httpMethod": "GET",
+          "apiPath": "/tax/calculations",
+          "options": [
+            {
+              "name": "consumed",
+              "field": "consumed",
+              "in": "query",
+              "type": "boolean",
+              "description": "Filter by whether an invoice has been issued from the calculation"
+            },
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by currency. Pass a comma-separated list to match any."
+            },
+            {
+              "name": "customer-reference",
+              "field": "customer_reference",
+              "in": "query",
+              "type": "string-list",
+              "description": "Filter by your own buyer id. Pass a comma-separated list to match any."
+            },
+            {
+              "name": "expired",
+              "field": "expired",
+              "in": "query",
+              "type": "boolean",
+              "description": "Filter by whether the calculation can still be issued from"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "sort",
+              "field": "sort",
+              "in": "query",
+              "type": "string",
+              "description": "Sort field and direction in format field:order. Sortable fields: created_at, tax_date, expires_at, total_tax, currency."
+            },
+            {
+              "name": "tax-date-gte",
+              "field": "tax_date_gte",
+              "in": "query",
+              "type": "string",
+              "description": "Tax date lower bound (inclusive)"
+            },
+            {
+              "name": "tax-date-lte",
+              "field": "tax_date_lte",
+              "in": "query",
+              "type": "string",
+              "description": "Tax date upper bound (inclusive)"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create-calculation",
+          "operationId": "create-tax-calculation",
+          "summary": "Calculate tax",
+          "description": "Computes tax for inline line items against your legal entity's configured tax engine and stores the result, returning an id (with an expiry) you pass when issuing a receipt to pin these exact line items and amounts. Each call creates a new calculation; send an `Idempotency-Key` header to make a retry return the original calculation instead of a new one. Provide a buyer address (and optional tax ids for reverse-charge / exemption) and per-line canonical tax codes; an omitted code defaults to general business SaaS.",
+          "epilogue": "Example (calculation.json sets currency, customer and line_items):\n  alguna tax create-calculation --body @calculation.json",
+          "httpMethod": "POST",
+          "apiPath": "/tax/calculations",
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "ISO 4217 currency code"
+            },
+            {
+              "name": "legal-entity-id",
+              "field": "legal_entity_id",
+              "in": "body",
+              "type": "string",
+              "description": "Selling legal entity; defaults to the org's default when omitted"
+            },
+            {
+              "name": "merchant-id",
+              "field": "merchant_id",
+              "in": "body",
+              "type": "string",
+              "description": "Existing sub-merchant the receipt is issued for; you remain the seller of record. Create the merchant before referencing it here. Requires the merchants entitlement"
+            },
+            {
+              "name": "tax-behavior",
+              "field": "tax_behavior",
+              "in": "body",
+              "type": "string",
+              "description": "Whether line amounts exclude (default) or already include tax",
+              "enum": [
+                "exclusive",
+                "inclusive"
+              ]
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "currency",
+            "customer",
+            "line_items"
+          ]
+        },
+        {
+          "name": "get-calculation",
+          "operationId": "get-tax-calculation",
+          "summary": "Read a tax calculation",
+          "description": "Returns one stored calculation: the lines as they were submitted joined with the engine's answer for each, plus the invoice it was issued into when it has been. A calculation stays readable after it expires or is issued from, so this is the audit record behind an invoice's tax. Read it back with the `tax_calculation_id` returned on the invoice.",
+          "httpMethod": "GET",
+          "apiPath": "/tax/calculations/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the calculation"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wallet-grants",
+      "description": "Amounts added to a wallet, with an optional expiry.",
+      "methods": [
+        {
+          "name": "list",
+          "operationId": "list-wallet-grants",
+          "summary": "List wallet grants",
+          "description": "Returns a paginated list of wallet grants across the organization. Supports filtering by wallet ID and grant status.",
+          "httpMethod": "GET",
+          "apiPath": "/wallet-grants",
+          "options": [
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            },
+            {
+              "name": "status",
+              "field": "status",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by grant status",
+              "enum": [
+                "pending",
+                "approved",
+                "voided",
+                "expired"
+              ]
+            },
+            {
+              "name": "wallet-id",
+              "field": "wallet_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by wallet ID"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-wallet-grant",
+          "summary": "Create a wallet grant",
+          "description": "Creates a new grant on a wallet for a given amount. Grants may carry an expiry date and an associated payment reference.",
+          "epilogue": "Example:\n  alguna wallet-grants create --wallet-id wal_123 --amount 100.00",
+          "httpMethod": "POST",
+          "apiPath": "/wallet-grants",
+          "options": [
+            {
+              "name": "amount",
+              "field": "amount",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Amount of the grant"
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Description of the grant"
+            },
+            {
+              "name": "expires-at",
+              "field": "expires_at",
+              "in": "body",
+              "type": "string",
+              "description": "When the grant expires"
+            },
+            {
+              "name": "payment-id",
+              "field": "payment_id",
+              "in": "body",
+              "type": "string",
+              "description": "Associated payment identifier"
+            },
+            {
+              "name": "wallet-id",
+              "field": "wallet_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Identifier of the wallet"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "amount",
+            "wallet_id"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-wallet-grant",
+          "summary": "Get a wallet grant",
+          "description": "Fetches a single wallet grant by ID.",
+          "httpMethod": "GET",
+          "apiPath": "/wallet-grants/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet-grant"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wallets",
+      "description": "Prepaid balances that customers draw from.",
+      "methods": [
+        {
+          "name": "list-grants",
+          "operationId": "list-wallet-grants-by-wallet",
+          "summary": "List grants for a wallet",
+          "description": "Returns every grant attached to a specific wallet.",
+          "httpMethod": "GET",
+          "apiPath": "/wallets/{id}/grants",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet"
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "operationId": "list-wallets",
+          "summary": "List wallets",
+          "description": "Returns a paginated list of wallets. Supports filtering by customer ID and active status.",
+          "httpMethod": "GET",
+          "apiPath": "/wallets",
+          "options": [
+            {
+              "name": "active",
+              "field": "active",
+              "in": "query",
+              "type": "boolean",
+              "description": "Filter by active status"
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by customer ID"
+            },
+            {
+              "name": "limit",
+              "field": "limit",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to return per page"
+            },
+            {
+              "name": "offset",
+              "field": "offset",
+              "in": "query",
+              "type": "integer",
+              "description": "Number of items to skip"
+            }
+          ],
+          "pagination": {
+            "offset": "offset",
+            "limit": "limit",
+            "results": "data",
+            "maxLimit": 100
+          }
+        },
+        {
+          "name": "create",
+          "operationId": "create-wallet",
+          "summary": "Create a wallet",
+          "description": "Creates a new wallet for a customer. Wallets hold a balance in a single currency and can optionally be restricted to a specific set of products.",
+          "httpMethod": "POST",
+          "apiPath": "/wallets",
+          "options": [
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Currency code"
+            },
+            {
+              "name": "customer-id",
+              "field": "customer_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Identifier of the customer"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Name of the wallet"
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "currency",
+            "customer_id",
+            "name"
+          ]
+        },
+        {
+          "name": "get",
+          "operationId": "get-wallet",
+          "summary": "Get a wallet",
+          "description": "Fetches a single wallet by ID.",
+          "httpMethod": "GET",
+          "apiPath": "/wallets/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "operationId": "delete-wallet",
+          "summary": "Delete a wallet",
+          "description": "Deletes a wallet. Wallets with a non-zero balance cannot be deleted.",
+          "httpMethod": "DELETE",
+          "apiPath": "/wallets/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet"
+            }
+          ],
+          "requireConfirmation": "This operation deletes the wallet."
+        },
+        {
+          "name": "update",
+          "operationId": "update-wallet",
+          "summary": "Update a wallet",
+          "description": "Patches an existing wallet. Supports changing the name, currency, active flag, and the list of products the wallet can be used against.",
+          "httpMethod": "PATCH",
+          "apiPath": "/wallets/{id}",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet"
+            }
+          ],
+          "options": [
+            {
+              "name": "active",
+              "field": "active",
+              "in": "body",
+              "type": "boolean",
+              "description": "Whether the wallet is active"
+            },
+            {
+              "name": "currency",
+              "field": "currency",
+              "in": "body",
+              "type": "string",
+              "description": "Currency code"
+            },
+            {
+              "name": "name",
+              "field": "name",
+              "in": "body",
+              "type": "string",
+              "description": "Name of the wallet"
+            }
+          ],
+          "hasRequestBody": true
+        },
+        {
+          "name": "get-balance",
+          "operationId": "get-wallet-balance",
+          "summary": "Get wallet balance",
+          "description": "Returns the current balance for a wallet.",
+          "httpMethod": "GET",
+          "apiPath": "/wallets/{id}/balance",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet"
+            }
+          ]
+        },
+        {
+          "name": "credit",
+          "operationId": "credit-wallet",
+          "summary": "Credit a wallet",
+          "description": "Credits a wallet by the specified amount and records the transaction type, reference ID, and optional description on the ledger.",
+          "httpMethod": "POST",
+          "apiPath": "/wallets/{id}/credit",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet"
+            }
+          ],
+          "options": [
+            {
+              "name": "amount",
+              "field": "amount",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Amount to credit or debit"
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Description of the transaction"
+            },
+            {
+              "name": "reference-id",
+              "field": "reference_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Reference identifier for the transaction"
+            },
+            {
+              "name": "transaction-type",
+              "field": "transaction_type",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Type of transaction",
+              "enum": [
+                "credit_grant",
+                "payment",
+                "refund",
+                "manual_debit"
+              ]
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "amount",
+            "reference_id",
+            "transaction_type"
+          ]
+        },
+        {
+          "name": "debit",
+          "operationId": "debit-wallet",
+          "summary": "Debit a wallet",
+          "description": "Debits a wallet by the specified amount. Fails with `422` if the wallet has insufficient balance.",
+          "httpMethod": "POST",
+          "apiPath": "/wallets/{id}/debit",
+          "arguments": [
+            {
+              "name": "id",
+              "description": "Unique identifier for the wallet"
+            }
+          ],
+          "options": [
+            {
+              "name": "amount",
+              "field": "amount",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Amount to credit or debit"
+            },
+            {
+              "name": "description",
+              "field": "description",
+              "in": "body",
+              "type": "string",
+              "description": "Description of the transaction"
+            },
+            {
+              "name": "reference-id",
+              "field": "reference_id",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Reference identifier for the transaction"
+            },
+            {
+              "name": "transaction-type",
+              "field": "transaction_type",
+              "in": "body",
+              "type": "string",
+              "required": true,
+              "description": "Type of transaction",
+              "enum": [
+                "credit_grant",
+                "payment",
+                "refund",
+                "manual_debit"
+              ]
+            }
+          ],
+          "hasRequestBody": true,
+          "requestBodyRequired": [
+            "amount",
+            "reference_id",
+            "transaction_type"
+          ],
+          "requireConfirmation": "This operation removes the amount from the wallet balance."
+        }
+      ]
+    }
+  ]
+}

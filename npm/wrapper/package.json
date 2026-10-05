@@ -1,0 +1,25 @@
+{
+  "name": "@alguna/cli",
+  "version": "0.1.0",
+  "description": "Command-line client for the Alguna API",
+  "license": "Apache-2.0",
+  "homepage": "https://alguna.com/docs",
+  "bin": {
+    "alguna": "bin/alguna.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alguna-io/cli.git"
+  }
+}
