@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# One goreleaser run builds the binaries once and feeds every install channel:
+# the GitHub Release and (through npm/assemble.mjs) npm.
+version: 2
+
+project_name: alguna
+
+builds:
+  - id: alguna
+    binary: alguna
+    main: ./cmd/alguna
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    # Go stamps the tag into the binary's build info, which `alguna version` prints.
+    ldflags:
+      - -s -w
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+
+archives:
+  - id: alguna
+    name_template: "alguna_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github-native
+
+release:
+  github:
+    owner: alguna-io
+    name: cli
+

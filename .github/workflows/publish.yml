@@ -1,0 +1,116 @@
+# Releases the CLI when a merge to main changes the version in npm/wrapper/package.json:
+# tag v<version>, goreleaser (GitHub Release), then npm stages @alguna/cli
+# and the platform packages through trusted publishing (OIDC, no stored token) for a
+# maintainer to approve. A tagged version is skipped, so after a failure use
+# "Re-run failed jobs".
+name: Publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  version:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Read the version and look for its tag
+        id: version
+        run: |
+          version=$(jq -r .version npm/wrapper/package.json)
+          echo "version=${version}" >>"$GITHUB_OUTPUT"
+          # --exit-code: 0 when the tag exists, 2 when it does not.
+          if git ls-remote --exit-code --tags origin "refs/tags/v${version}" >/dev/null; then
+            echo "v${version} is already tagged, so it is already published. Nothing to do."
+            echo "publish=false" >>"$GITHUB_OUTPUT"
+          else
+            status=$?
+            if [ "${status}" != 2 ]; then exit "${status}"; fi
+            echo "publish=true" >>"$GITHUB_OUTPUT"
+          fi
+
+  goreleaser:
+    needs: version
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # goreleaser reads the previous tag for the release notes.
+          fetch-depth: 0
+
+      # The workflow token's push starts no other run; a re-run keeps the tag it pushed.
+      - name: Push the tag
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          if [ "$(git rev-parse -q --verify "refs/tags/v${VERSION}^{commit}")" != "${GITHUB_SHA}" ]; then
+            git tag "v${VERSION}" "${GITHUB_SHA}"
+            git push origin "refs/tags/v${VERSION}"
+          fi
+
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+
+      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: v2.18.2
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dist
+          path: |
+            dist/artifacts.json
+            dist/*/alguna
+            dist/*/alguna.exe
+          if-no-files-found: error
+
+  # Its own job, so only the npm upload can get an OIDC token (GitHub-hosted runners only).
+  npm:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: dist
+          path: dist/
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # `npm stage publish` needs npm 11.15 or later.
+      - name: Install npm
+        run: npm install --global npm@11.21.0
+
+      - name: Stage on npm
+        run: |
+          node npm/assemble.mjs npm-out | while IFS=$'\t' read -r dir tag; do
+            npm stage publish "./${dir}" --tag "${tag}"
+          done
